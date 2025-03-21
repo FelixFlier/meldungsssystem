@@ -1,0 +1,599 @@
+/* static/css/animations.css */
+
+/* =============================================
+   LICHTER, SCHATTEN UND GLÜHEN
+============================================= */
+
+/* Mehrschichtige Glüh-Overlay mit verbesserter Tiefe und Intensität */
+.green-glow-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    /* Hauptglühen - oben links */
+    radial-gradient(circle at 20% 20%, rgba(0, 195, 137, 0.3) 0%, transparent 50%),
+    
+    /* Sekundäres Glühen - unten rechts */
+    radial-gradient(circle at 80% 70%, rgba(72, 223, 176, 0.25) 0%, transparent 55%),
+    
+    /* Tertiäres Glühen - Zentrum oben */
+    radial-gradient(circle at 50% 10%, rgba(0, 215, 157, 0.2) 0%, transparent 40%),
+    
+    /* Weiches Ambient Glühen im Zentrum */
+    radial-gradient(circle at 50% 50%, rgba(0, 195, 137, 0.1) 0%, transparent 90%),
+    
+    /* Subtiler Schimmer über die gesamte Fläche */
+    linear-gradient(180deg, rgba(0, 195, 137, 0.03) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: screen;
+}
+
+/* Interaktive Glüheffekte für wichtige Elemente */
+@keyframes pulseGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 0 15px rgba(0, 195, 137, 0.4),
+      0 0 30px rgba(0, 195, 137, 0);
+  }
+  50% { 
+    box-shadow: 
+      0 0 25px rgba(0, 195, 137, 0.6),
+      0 0 50px rgba(0, 195, 137, 0.2);
+  }
+}
+
+/* Verbesserte Texttitel mit verstärktem Lichteffekt */
+.title-glow {
+  text-shadow: 
+    0 0 5px rgba(0, 195, 137, 0.3),
+    0 0 20px rgba(0, 195, 137, 0.6),
+    0 0 40px rgba(0, 195, 137, 0.3);
+  position: relative;
+}
+
+.title-glow::after {
+  content: '';
+  position: absolute;
+  width: 140%;
+  height: 60px;
+  left: -20%;
+  bottom: -30px;
+  background: radial-gradient(ellipse at center, rgba(0, 195, 137, 0.5) 0%, transparent 70%);
+  filter: blur(15px);
+  opacity: 0.6;
+  z-index: -1;
+  animation: pulsateTitleGlow 4s ease-in-out infinite;
+}
+
+@keyframes pulsateTitleGlow {
+  0%, 100% { opacity: 0.6; filter: blur(15px); }
+  50% { opacity: 0.8; filter: blur(20px); }
+}
+
+/* =============================================
+   STERNENFELD UND HINTERGRÜNDE
+============================================= */
+
+/* Improve star animation visibility with enhanced brightness */
+@keyframes twinkle {
+  0%, 100% { 
+    opacity: 0.2; 
+    filter: blur(0.5px);
+  }
+  50% { 
+    opacity: 1; 
+    filter: blur(1px);
+  }
+}
+
+/* More natural, non-linear drifting movement */
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(6px, 4px); }
+  40% { transform: translate(2px, 8px); }
+  60% { transform: translate(-4px, 10px); }
+  75% { transform: translate(-6px, 5px); }
+  90% { transform: translate(-2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Enhanced glowing stars with color variations */
+.star.small {
+  box-shadow: 0 0 3px rgba(0, 195, 137, 0.6);
+}
+
+.star.medium {
+  box-shadow: 0 0 4px rgba(72, 223, 176, 0.7);
+}
+
+.star.large {
+  box-shadow: 0 0 6px rgba(0, 215, 157, 0.8);
+}
+
+.star.extra-large {
+  box-shadow: 0 0 10px rgba(0, 195, 137, 0.9);
+}
+
+/* Super bright star with halo effect (rare) */
+.star.bright {
+  position: relative;
+}
+
+.star.bright::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  filter: blur(3px);
+  z-index: -1;
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+/* Apply animations correctly with proper combinations */
+.twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.drift {
+  animation: drift 20s ease-in-out infinite;
+}
+
+.drift-slow {
+  animation: drift 35s ease-in-out infinite;
+}
+
+.twinkle-drift {
+  animation: 
+    twinkle 3s ease-in-out infinite, 
+    drift 20s ease-in-out infinite;
+}
+
+/* Random star color animation */
+@keyframes colorShift {
+  0%, 100% { filter: hue-rotate(0deg); }
+  33% { filter: hue-rotate(30deg); }
+  66% { filter: hue-rotate(-30deg); }
+}
+
+.color-shift {
+  animation: colorShift 10s ease-in-out infinite;
+}
+
+/* =============================================
+   INTERAKTIVE ELEMENTE UND BUTTONS
+============================================= */
+
+/* Button Animation with improved light effects */
+.creative-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.creative-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.7s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.creative-btn:hover::before {
+  left: 100%;
+}
+
+/* Edge glow effect for buttons */
+.creative-btn::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #00C389, transparent, #00C389, transparent);
+  background-size: 400% 400%;
+  opacity: 0;
+  border-radius: inherit;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  animation: borderGradient 3s ease infinite;
+}
+
+.creative-btn:hover::after {
+  opacity: 0.6;
+}
+
+@keyframes borderGradient {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+/* Card Hover Animation with subtle 3D effect */
+.card-hover {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  border: 1px solid rgba(0, 195, 137, 0.6);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(0, 195, 137, 0.4);
+}
+
+.card-hover:hover::before {
+  opacity: 1;
+}
+
+.card-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at 50% 0%, 
+    rgba(0, 195, 137, 0.4) 0%, 
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Pulse Animation with improved glow */
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 
+      0 0 0 0 rgba(0, 195, 137, 0.7),
+      0 0 0 0 rgba(0, 195, 137, 0.4);
+  }
+  50% { 
+    transform: scale(1.05); 
+    box-shadow: 
+      0 0 0 10px rgba(0, 195, 137, 0),
+      0 0 30px 5px rgba(0, 195, 137, 0.2);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* =============================================
+   ÜBERGÄNGE UND EFFEKTE
+============================================= */
+
+/* Toast animations with improved transitions */
+.toast {
+  animation: slideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  position: relative;
+}
+
+.toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: 0 0 15px rgba(0, 195, 137, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.toast:hover::before {
+  opacity: 1;
+}
+
+@keyframes slideIn {
+  from { 
+    transform: translateX(100%); 
+    opacity: 0; 
+    filter: blur(3px);
+  }
+  to { 
+    transform: translateX(0); 
+    opacity: 1; 
+    filter: blur(0);
+  }
+}
+
+.toast.exit {
+  animation: slideOut 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+@keyframes slideOut {
+  from { 
+    transform: translateX(0); 
+    opacity: 1; 
+    filter: blur(0);
+  }
+  to { 
+    transform: translateX(100%); 
+    opacity: 0; 
+    filter: blur(3px);
+  }
+}
+
+/* Page transition animation with depth effect */
+.page-enter {
+  opacity: 0;
+  transform: translateY(30px) scale(0.98);
+  filter: blur(5px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+  transition: opacity 400ms, transform 400ms, filter 400ms;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: scale(1.02);
+  filter: blur(5px);
+  transition: opacity 300ms, transform 300ms, filter 300ms;
+}
+
+/* Enhanced loading animation with light rays */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  border: 3px solid rgba(0, 195, 137, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid rgba(0, 195, 137, 1);
+  border-right: 3px solid rgba(0, 195, 137, 0.3);
+  border-bottom: 3px solid rgba(0, 195, 137, 0.1);
+  border-left: 3px solid rgba(0, 195, 137, 0.7);
+  width: 30px;
+  height: 30px;
+  animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+  position: relative;
+}
+
+.loading-spinner::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 195, 137, 0.2) 0%, transparent 70%);
+  animation: pulse 2s infinite;
+}
+
+/* Focus animation with improved accessibility */
+@keyframes focusPulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 195, 137, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 195, 137, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 195, 137, 0); }
+}
+
+.focus-visible:focus {
+  animation: focusPulse 1.5s infinite;
+  outline: none;
+}
+
+/* Group-Hover Animation für Icons mit verbessertem Glühen */
+.group:hover .group-hover\:scale-110 {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 8px rgba(0, 195, 137, 0.6));
+}
+
+/* Verstärktes Hover-Glühen für Buttons */
+.creative-btn:hover {
+  box-shadow: 
+    0 0 20px rgba(0, 195, 137, 0.7), 
+    0 0 30px rgba(0, 195, 137, 0.3),
+    inset 0 0 15px rgba(0, 195, 137, 0.3);
+}
+
+/* =============================================
+   FORTGESCHRITTENE EFFEKTE
+============================================= */
+
+/* Animation für Progress-Bar mit verbessertem Farbverlauf */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+#progress-bar {
+  background: linear-gradient(90deg, 
+    #00C389, #48DFB0, #00E676, #48DFB0, #00C389);
+  background-size: 300% 300%;
+  animation: gradientShift 3s ease infinite;
+  position: relative;
+}
+
+#progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  filter: blur(3px);
+  animation: progressGlow 2s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* Modal Einfahr-Animation mit 3D-Tiefe */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.95);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.modal.active .modal-content {
+  animation: modalSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Hinzugefügte Animation für Hover-Effekte mit Lichtreflexion */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 195, 137, 0.3);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 195, 137, 0.6);
+    filter: brightness(1.1);
+  }
+}
+
+.glow-pulse:hover {
+  animation: glowPulse 2s infinite;
+}
+
+/* Halo Effect für wichtige Call-to-Action-Elemente */
+.halo-effect {
+  position: relative;
+  z-index: 1;
+}
+
+.halo-effect::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  right: -15px;
+  bottom: -15px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, 
+    rgba(0, 195, 137, 0.5) 0%, 
+    rgba(0, 195, 137, 0.2) 40%, 
+    transparent 70%);
+  z-index: -1;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.5s ease;
+}
+
+.halo-effect:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Verbesserte Fokus-Animation für Barrierefreiheit */
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
+  outline: 2px solid #00C389;
+  outline-offset: 3px;
+  animation: focusPulse 1.5s 1;
+  box-shadow: 0 0 0 4px rgba(0, 195, 137, 0.3);
+}
+
+/* Subtle text glow */
+.text-glow {
+  text-shadow: 0 0 10px rgba(0, 195, 137, 0.6);
+}
+
+/* =============================================
+   ANIMATIONEN FÜR FORMULARELEMENTE
+============================================= */
+
+/* Input focus animation */
+@keyframes inputFocus {
+  0% { border-color: rgba(0, 195, 137, 0.4); }
+  50% { border-color: rgba(0, 195, 137, 0.8); }
+  100% { border-color: rgba(0, 195, 137, 0.4); }
+}
+
+input:focus, select:focus, textarea:focus {
+  animation: inputFocus 2s infinite;
+}
+
+/* Checkbox and radio custom animations */
+@keyframes checkmarkDraw {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.custom-checkbox:checked + label .checkmark {
+  animation: checkmarkDraw 0.3s ease forwards;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+/* Form success animation */
+@keyframes formSuccess {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.form-success-icon {
+  animation: formSuccess 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Animated placeholder fade */
+@keyframes placeholderFade {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.3; }
+}
+
+input::placeholder {
+  animation: placeholderFade 3s infinite;
+}
+
+/* Shake animation for validation errors */
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+}
