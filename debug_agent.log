@@ -1,0 +1,213 @@
+2025-04-13 21:52:23,963 - debug_agent - INFO - ======== DEBUG DIRECT AGENT - START ========
+2025-04-13 21:52:23,963 - debug_agent - INFO - Running Debug Agent for incident ID: 20
+2025-04-13 21:52:23,963 - debug_agent - INFO - API Host: localhost:8000
+2025-04-13 21:52:23,963 - debug_agent - INFO - Token Valid: Yes
+2025-04-13 21:52:24,185 - debug_agent - INFO - Platform: Windows-10-10.0.22631-SP0
+2025-04-13 21:52:24,185 - debug_agent - INFO - Python Version: 3.10.9 | packaged by Anaconda, Inc. | (main, Mar  1 2023, 18:18:15) [MSC v.1916 64 bit (AMD64)]
+2025-04-13 21:52:24,185 - debug_agent - INFO - Working Directory: C:\Users\felix\Setzter Projekt\Production
+2025-04-13 21:52:24,185 - debug_agent - INFO - PATH: C:\Users\felix\Setzter Projekt\Production\venv\Scripts;C:\Users\felix\anaconda32;C:\Users\felix\anaconda32\Library\mingw-w64\bin;C:\Users\felix\anaconda32\Library\usr\bin;C:\Users\felix\anaconda32\Library\bin;C:\Users\felix\anaconda32\Scripts;C:\Users\felix\anaconda32\bin;C:\Users\felix\anaconda32\condabin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn;C:\Program Files\dotnet;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python313;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python310;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;.;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin;C:\Users\felix\anaconda32;C:\Users\felix\anaconda32\Library\mingw-w64\bin;C:\Users\felix\anaconda32\Library\usr\bin;C:\Users\felix\anaconda32\Library\bin;C:\Users\felix\anaconda32\Scripts;C:\Users\felix\anaconda32\bin;C:\Users\felix\anaconda32\condabin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn;C:\Program Files\dotnet;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python313;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python310;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;.;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\dotnet\;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs\;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\felix\AppData\Local\Programs\Python\Python313\;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts\;C:\Users\felix\AppData\Local\Programs\Python\Python310\;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64\;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin
+2025-04-13 21:52:24,185 - debug_agent - INFO - Virtual Env: C:\Users\felix\Setzter Projekt\Production\venv
+2025-04-13 21:52:24,185 - debug_agent - INFO - Testing API connection...
+2025-04-13 21:52:24,185 - debug_agent - INFO - Updating status for incident 20 to 'processing'...
+2025-04-13 21:52:24,201 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:8000
+2025-04-13 21:52:28,285 - debug_agent - ERROR - Error updating status: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /incidents/20 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001B00BC898D0>: Failed to establish a new connection: [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte'))
+2025-04-13 21:52:28,285 - debug_agent - INFO - API connection successful!
+2025-04-13 21:52:28,285 - debug_agent - INFO - Detecting Chrome version...
+2025-04-13 21:52:29,416 - debug_agent - ERROR - Could not get Chrome version: Command 'wmic datafile where name="C:\Program Files\Google\Chrome\Application\chrome.exe" get Version /value' returned non-zero exit status 2147749911.
+2025-04-13 21:52:29,422 - debug_agent - INFO - === CHROMEDRIVER DETECTION ===
+2025-04-13 21:52:29,422 - debug_agent - INFO - Method 1: Checking if chromedriver is in PATH...
+2025-04-13 21:52:29,461 - debug_agent - WARNING - chromedriver.exe not found in PATH
+2025-04-13 21:52:29,461 - debug_agent - INFO - Method 2: Using webdriver_manager...
+2025-04-13 21:52:29,461 - WDM - INFO - ====== WebDriver manager ======
+2025-04-13 21:52:39,004 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-13 21:52:39,008 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-04-13 21:52:39,257 - urllib3.connectionpool - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10632
+2025-04-13 21:52:39,375 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-13 21:52:39,396 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-04-13 21:52:39,608 - urllib3.connectionpool - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10632
+2025-04-13 21:52:39,647 - WDM - INFO - Driver [C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver] found in cache
+2025-04-13 21:52:39,647 - debug_agent - INFO - webdriver_manager installed driver at: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 21:52:39,647 - debug_agent - WARNING - webdriver_manager returned non-executable path: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 21:52:39,647 - debug_agent - INFO - Looking for chromedriver.exe in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32...
+2025-04-13 21:52:39,647 - debug_agent - INFO - Files in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32:
+2025-04-13 21:52:39,658 - debug_agent - INFO -   - chromedriver.exe
+2025-04-13 21:52:39,658 - debug_agent - INFO -   - LICENSE.chromedriver
+2025-04-13 21:52:39,658 - debug_agent - INFO -   - THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 21:52:39,658 - debug_agent - INFO - Searching in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32:
+2025-04-13 21:52:39,664 - debug_agent - INFO -   - chromedriver.exe
+2025-04-13 21:52:39,664 - debug_agent - INFO - Found chromedriver.exe at: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 21:52:39,668 - debug_agent - INFO - Testing if chromedriver is executable: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 21:52:39,668 - debug_agent - INFO - File permissions: 33279
+2025-04-13 21:52:44,203 - debug_agent - INFO - ChromeDriver version output: ChromeDriver 135.0.7049.84 (6c019e56001911b3fd467e03bf68c435924d62f4-refs/branch-heads/7049@{#1778})
+
+2025-04-13 21:52:44,207 - debug_agent - INFO - ==== CREATING WEBDRIVER ====
+2025-04-13 21:52:44,207 - debug_agent - INFO - Using chromedriver_path: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 21:52:44,210 - debug_agent - INFO - Creating Chrome WebDriver...
+2025-04-13 21:52:44,246 - selenium.webdriver.common.service - DEBUG - Started executable: `C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe` in a child process with pid: 28320
+2025-04-13 21:52:44,755 - selenium.webdriver.remote.remote_connection - DEBUG - POST http://localhost:54670/session {"capabilities": {"firstMatch": [{}], "alwaysMatch": {"browserName": "chrome", "pageLoadStrategy": "normal", "goog:chromeOptions": {"extensions": [], "args": ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--headless"]}}}}
+2025-04-13 21:52:44,760 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:54670
+2025-04-13 21:52:52,826 - urllib3.connectionpool - DEBUG - http://localhost:54670 "POST /session HTTP/1.1" 200 0
+2025-04-13 21:52:52,834 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":{"capabilities":{"acceptInsecureCerts":false,"browserName":"chrome","browserVersion":"135.0.7049.85","chrome":{"chromedriverVersion":"135.0.7049.84 (6c019e56001911b3fd467e03bf68c435924d62f4-refs/branch-heads/7049@{#1778})","userDataDir":"C:\\Users\\felix\\AppData\\Local\\Temp\\scoped_dir28320_1599439405"},"fedcm:accounts":true,"goog:chromeOptions":{"debuggerAddress":"localhost:54673"},"networkConnectionEnabled":false,"pageLoadStrategy":"normal","platformName":"windows","proxy":{},"setWindowRect":true,"strictFileInteractability":false,"timeouts":{"implicit":0,"pageLoad":300000,"script":30000},"unhandledPromptBehavior":"dismiss and notify","webauthn:extension:credBlob":true,"webauthn:extension:largeBlob":true,"webauthn:extension:minPinLength":true,"webauthn:extension:prf":true,"webauthn:virtualAuthenticators":true},"sessionId":"a194044761301d136a4f2c58656da6fd"}} | headers=HTTPHeaderDict({'Content-Length': '882', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:52:52,835 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:52:52,835 - debug_agent - INFO - WebDriver successfully created!
+2025-04-13 21:52:52,835 - debug_agent - INFO - Testing browser with Google.com...
+2025-04-13 21:52:52,835 - selenium.webdriver.remote.remote_connection - DEBUG - POST http://localhost:54670/session/a194044761301d136a4f2c58656da6fd/url {"url": "https://www.google.com"}
+2025-04-13 21:52:56,696 - urllib3.connectionpool - DEBUG - http://localhost:54670 "POST /session/a194044761301d136a4f2c58656da6fd/url HTTP/1.1" 200 0
+2025-04-13 21:52:56,696 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:52:56,704 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:52:56,704 - selenium.webdriver.remote.remote_connection - DEBUG - GET http://localhost:54670/session/a194044761301d136a4f2c58656da6fd/title {}
+2025-04-13 21:52:56,872 - urllib3.connectionpool - DEBUG - http://localhost:54670 "GET /session/a194044761301d136a4f2c58656da6fd/title HTTP/1.1" 200 0
+2025-04-13 21:52:56,872 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":"Google"} | headers=HTTPHeaderDict({'Content-Length': '18', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:52:56,880 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:52:56,880 - debug_agent - INFO - Page title: Google
+2025-04-13 21:52:56,880 - selenium.webdriver.remote.remote_connection - DEBUG - DELETE http://localhost:54670/session/a194044761301d136a4f2c58656da6fd {}
+2025-04-13 21:52:57,195 - urllib3.connectionpool - DEBUG - http://localhost:54670 "DELETE /session/a194044761301d136a4f2c58656da6fd HTTP/1.1" 200 0
+2025-04-13 21:52:57,195 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:52:57,195 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:52:59,984 - debug_agent - INFO - WebDriver test successful!
+2025-04-13 21:52:59,984 - debug_agent - INFO - Updating status for incident 20 to 'completed'...
+2025-04-13 21:52:59,992 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:8000
+2025-04-13 21:53:04,054 - debug_agent - ERROR - Error updating status: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /incidents/20 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001B00BC8B400>: Failed to establish a new connection: [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte'))
+2025-04-13 21:53:04,054 - debug_agent - INFO - ======== DEBUG DIRECT AGENT - END ========
+2025-04-13 21:58:09,178 - debug_agent - INFO - ======== DEBUG DIRECT AGENT - START ========
+2025-04-13 21:58:09,180 - debug_agent - INFO - Running Debug Agent for incident ID: 21
+2025-04-13 21:58:09,180 - debug_agent - INFO - API Host: localhost:8000
+2025-04-13 21:58:09,180 - debug_agent - INFO - Token Valid: Yes
+2025-04-13 21:58:09,426 - debug_agent - INFO - Platform: Windows-10-10.0.22631-SP0
+2025-04-13 21:58:09,430 - debug_agent - INFO - Python Version: 3.10.9 | packaged by Anaconda, Inc. | (main, Mar  1 2023, 18:18:15) [MSC v.1916 64 bit (AMD64)]
+2025-04-13 21:58:09,430 - debug_agent - INFO - Working Directory: C:\Users\felix\Setzter Projekt\Production
+2025-04-13 21:58:09,430 - debug_agent - INFO - PATH: C:\Users\felix\Setzter Projekt\Production\venv\Scripts;C:\Users\felix\anaconda32;C:\Users\felix\anaconda32\Library\mingw-w64\bin;C:\Users\felix\anaconda32\Library\usr\bin;C:\Users\felix\anaconda32\Library\bin;C:\Users\felix\anaconda32\Scripts;C:\Users\felix\anaconda32\bin;C:\Users\felix\anaconda32\condabin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn;C:\Program Files\dotnet;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python313;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python310;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;.;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin;C:\Users\felix\anaconda32;C:\Users\felix\anaconda32\Library\mingw-w64\bin;C:\Users\felix\anaconda32\Library\usr\bin;C:\Users\felix\anaconda32\Library\bin;C:\Users\felix\anaconda32\Scripts;C:\Users\felix\anaconda32\bin;C:\Users\felix\anaconda32\condabin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn;C:\Program Files\dotnet;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python313;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python310;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;.;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\dotnet\;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs\;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\felix\AppData\Local\Programs\Python\Python313\;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts\;C:\Users\felix\AppData\Local\Programs\Python\Python310\;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64\;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin
+2025-04-13 21:58:09,430 - debug_agent - INFO - Virtual Env: C:\Users\felix\Setzter Projekt\Production\venv
+2025-04-13 21:58:09,430 - debug_agent - INFO - Testing API connection...
+2025-04-13 21:58:09,434 - debug_agent - INFO - Updating status for incident 21 to 'processing'...
+2025-04-13 21:58:09,464 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:8000
+2025-04-13 21:58:13,782 - debug_agent - ERROR - Error updating status: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /incidents/21 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E66E0B1E70>: Failed to establish a new connection: [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte'))
+2025-04-13 21:58:13,782 - debug_agent - INFO - API connection successful!
+2025-04-13 21:58:13,788 - debug_agent - INFO - Detecting Chrome version...
+2025-04-13 21:58:14,800 - debug_agent - ERROR - Could not get Chrome version: Command 'wmic datafile where name="C:\Program Files\Google\Chrome\Application\chrome.exe" get Version /value' returned non-zero exit status 2147749911.
+2025-04-13 21:58:14,808 - debug_agent - INFO - === CHROMEDRIVER DETECTION ===
+2025-04-13 21:58:14,808 - debug_agent - INFO - Method 1: Checking if chromedriver is in PATH...
+2025-04-13 21:58:14,845 - debug_agent - WARNING - chromedriver.exe not found in PATH
+2025-04-13 21:58:14,845 - debug_agent - INFO - Method 2: Using webdriver_manager...
+2025-04-13 21:58:14,845 - WDM - INFO - ====== WebDriver manager ======
+2025-04-13 21:58:24,099 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-13 21:58:24,114 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-04-13 21:58:24,323 - urllib3.connectionpool - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10632
+2025-04-13 21:58:24,356 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-13 21:58:24,364 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-04-13 21:58:24,507 - urllib3.connectionpool - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10632
+2025-04-13 21:58:24,532 - WDM - INFO - Driver [C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver] found in cache
+2025-04-13 21:58:24,532 - debug_agent - INFO - webdriver_manager installed driver at: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 21:58:24,532 - debug_agent - WARNING - webdriver_manager returned non-executable path: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 21:58:24,532 - debug_agent - INFO - Looking for chromedriver.exe in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32...
+2025-04-13 21:58:24,532 - debug_agent - INFO - Files in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32:
+2025-04-13 21:58:24,532 - debug_agent - INFO -   - chromedriver.exe
+2025-04-13 21:58:24,532 - debug_agent - INFO -   - LICENSE.chromedriver
+2025-04-13 21:58:24,532 - debug_agent - INFO -   - THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 21:58:24,548 - debug_agent - INFO - Searching in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32:
+2025-04-13 21:58:24,550 - debug_agent - INFO -   - chromedriver.exe
+2025-04-13 21:58:24,550 - debug_agent - INFO - Found chromedriver.exe at: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 21:58:24,550 - debug_agent - INFO - Testing if chromedriver is executable: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 21:58:24,550 - debug_agent - INFO - File permissions: 33279
+2025-04-13 21:58:24,974 - debug_agent - INFO - ChromeDriver version output: ChromeDriver 135.0.7049.84 (6c019e56001911b3fd467e03bf68c435924d62f4-refs/branch-heads/7049@{#1778})
+
+2025-04-13 21:58:24,981 - debug_agent - INFO - ==== CREATING WEBDRIVER ====
+2025-04-13 21:58:24,982 - debug_agent - INFO - Using chromedriver_path: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 21:58:24,983 - debug_agent - INFO - Creating Chrome WebDriver...
+2025-04-13 21:58:25,018 - selenium.webdriver.common.service - DEBUG - Started executable: `C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe` in a child process with pid: 5500
+2025-04-13 21:58:25,533 - selenium.webdriver.remote.remote_connection - DEBUG - POST http://localhost:54898/session {"capabilities": {"firstMatch": [{}], "alwaysMatch": {"browserName": "chrome", "pageLoadStrategy": "normal", "goog:chromeOptions": {"extensions": [], "args": ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--headless"]}}}}
+2025-04-13 21:58:25,535 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:54898
+2025-04-13 21:58:32,928 - urllib3.connectionpool - DEBUG - http://localhost:54898 "POST /session HTTP/1.1" 200 0
+2025-04-13 21:58:32,931 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":{"capabilities":{"acceptInsecureCerts":false,"browserName":"chrome","browserVersion":"135.0.7049.85","chrome":{"chromedriverVersion":"135.0.7049.84 (6c019e56001911b3fd467e03bf68c435924d62f4-refs/branch-heads/7049@{#1778})","userDataDir":"C:\\Users\\felix\\AppData\\Local\\Temp\\scoped_dir5500_597686131"},"fedcm:accounts":true,"goog:chromeOptions":{"debuggerAddress":"localhost:54902"},"networkConnectionEnabled":false,"pageLoadStrategy":"normal","platformName":"windows","proxy":{},"setWindowRect":true,"strictFileInteractability":false,"timeouts":{"implicit":0,"pageLoad":300000,"script":30000},"unhandledPromptBehavior":"dismiss and notify","webauthn:extension:credBlob":true,"webauthn:extension:largeBlob":true,"webauthn:extension:minPinLength":true,"webauthn:extension:prf":true,"webauthn:virtualAuthenticators":true},"sessionId":"2a81cfcc3d828b2135da1f2d78696512"}} | headers=HTTPHeaderDict({'Content-Length': '880', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:58:32,931 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:58:32,931 - debug_agent - INFO - WebDriver successfully created!
+2025-04-13 21:58:32,931 - debug_agent - INFO - Testing browser with Google.com...
+2025-04-13 21:58:32,931 - selenium.webdriver.remote.remote_connection - DEBUG - POST http://localhost:54898/session/2a81cfcc3d828b2135da1f2d78696512/url {"url": "https://www.google.com"}
+2025-04-13 21:58:38,831 - urllib3.connectionpool - DEBUG - http://localhost:54898 "POST /session/2a81cfcc3d828b2135da1f2d78696512/url HTTP/1.1" 200 0
+2025-04-13 21:58:38,831 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:58:38,833 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:58:38,833 - selenium.webdriver.remote.remote_connection - DEBUG - GET http://localhost:54898/session/2a81cfcc3d828b2135da1f2d78696512/title {}
+2025-04-13 21:58:39,196 - urllib3.connectionpool - DEBUG - http://localhost:54898 "GET /session/2a81cfcc3d828b2135da1f2d78696512/title HTTP/1.1" 200 0
+2025-04-13 21:58:39,196 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":"Google"} | headers=HTTPHeaderDict({'Content-Length': '18', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:58:39,196 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:58:39,196 - debug_agent - INFO - Page title: Google
+2025-04-13 21:58:39,196 - selenium.webdriver.remote.remote_connection - DEBUG - DELETE http://localhost:54898/session/2a81cfcc3d828b2135da1f2d78696512 {}
+2025-04-13 21:58:40,566 - urllib3.connectionpool - DEBUG - http://localhost:54898 "DELETE /session/2a81cfcc3d828b2135da1f2d78696512 HTTP/1.1" 200 0
+2025-04-13 21:58:40,566 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 21:58:40,566 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 21:58:43,581 - debug_agent - INFO - WebDriver test successful!
+2025-04-13 21:58:43,581 - debug_agent - INFO - Updating status for incident 21 to 'completed'...
+2025-04-13 21:58:43,588 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:8000
+2025-04-13 21:58:47,659 - debug_agent - ERROR - Error updating status: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /incidents/21 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E66E0B3970>: Failed to establish a new connection: [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte'))
+2025-04-13 21:58:47,659 - debug_agent - INFO - ======== DEBUG DIRECT AGENT - END ========
+2025-04-13 22:00:23,004 - debug_agent - INFO - ======== DEBUG DIRECT AGENT - START ========
+2025-04-13 22:00:23,026 - debug_agent - INFO - Running Debug Agent for incident ID: 22
+2025-04-13 22:00:23,034 - debug_agent - INFO - API Host: localhost:8000
+2025-04-13 22:00:23,058 - debug_agent - INFO - Token Valid: Yes
+2025-04-13 22:00:25,357 - debug_agent - INFO - Platform: Windows-10-10.0.22631-SP0
+2025-04-13 22:00:25,364 - debug_agent - INFO - Python Version: 3.10.9 | packaged by Anaconda, Inc. | (main, Mar  1 2023, 18:18:15) [MSC v.1916 64 bit (AMD64)]
+2025-04-13 22:00:25,364 - debug_agent - INFO - Working Directory: C:\Users\felix\Setzter Projekt\Production
+2025-04-13 22:00:25,365 - debug_agent - INFO - PATH: C:\Users\felix\Setzter Projekt\Production\venv\Scripts;C:\Users\felix\anaconda32;C:\Users\felix\anaconda32\Library\mingw-w64\bin;C:\Users\felix\anaconda32\Library\usr\bin;C:\Users\felix\anaconda32\Library\bin;C:\Users\felix\anaconda32\Scripts;C:\Users\felix\anaconda32\bin;C:\Users\felix\anaconda32\condabin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn;C:\Program Files\dotnet;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python313;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python310;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;.;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin;C:\Users\felix\anaconda32;C:\Users\felix\anaconda32\Library\mingw-w64\bin;C:\Users\felix\anaconda32\Library\usr\bin;C:\Users\felix\anaconda32\Library\bin;C:\Users\felix\anaconda32\Scripts;C:\Users\felix\anaconda32\bin;C:\Users\felix\anaconda32\condabin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn;C:\Program Files\dotnet;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python313;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\felix\AppData\Local\Programs\Python\Python310;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;.;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\dotnet\;C:\Program Files\HP\HP One Agent;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs\;C:\Users\felix\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\felix\AppData\Local\Programs\Python\Python313\;C:\Users\felix\AppData\Local\Programs\Python\Python310\Scripts\;C:\Users\felix\AppData\Local\Programs\Python\Python310\;C:\Users\felix\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\PyCharm Community Edition 2022.1.3\bin;;C:\Users\felix\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\felix\AppData\Local\Programs\MiKTeX\miktex\bin\x64\;C:\Users\felix\.dotnet\tools;C:\Users\felix\AppData\Roaming\npm;C:\Users\felix\AppData\Local\Programs\Windsurf\bin
+2025-04-13 22:00:25,365 - debug_agent - INFO - Virtual Env: C:\Users\felix\Setzter Projekt\Production\venv
+2025-04-13 22:00:25,365 - debug_agent - INFO - Testing API connection...
+2025-04-13 22:00:25,365 - debug_agent - INFO - Updating status for incident 22 to 'processing'...
+2025-04-13 22:00:25,390 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:8000
+2025-04-13 22:00:29,759 - debug_agent - ERROR - Error updating status: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /incidents/22 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002214DD91E70>: Failed to establish a new connection: [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte'))
+2025-04-13 22:00:29,759 - debug_agent - INFO - API connection successful!
+2025-04-13 22:00:29,759 - debug_agent - INFO - Detecting Chrome version...
+2025-04-13 22:00:30,551 - debug_agent - ERROR - Could not get Chrome version: Command 'wmic datafile where name="C:\Program Files\Google\Chrome\Application\chrome.exe" get Version /value' returned non-zero exit status 2147749911.
+2025-04-13 22:00:30,554 - debug_agent - INFO - === CHROMEDRIVER DETECTION ===
+2025-04-13 22:00:30,556 - debug_agent - INFO - Method 1: Checking if chromedriver is in PATH...
+2025-04-13 22:00:30,583 - debug_agent - WARNING - chromedriver.exe not found in PATH
+2025-04-13 22:00:30,583 - debug_agent - INFO - Method 2: Using webdriver_manager...
+2025-04-13 22:00:30,583 - WDM - INFO - ====== WebDriver manager ======
+2025-04-13 22:00:45,827 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-13 22:00:45,846 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-04-13 22:00:46,499 - urllib3.connectionpool - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10632
+2025-04-13 22:00:46,530 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-13 22:00:46,546 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): googlechromelabs.github.io:443
+2025-04-13 22:00:46,723 - urllib3.connectionpool - DEBUG - https://googlechromelabs.github.io:443 "GET /chrome-for-testing/latest-patch-versions-per-build.json HTTP/1.1" 200 10632
+2025-04-13 22:00:46,754 - WDM - INFO - Driver [C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver] found in cache
+2025-04-13 22:00:46,754 - debug_agent - INFO - webdriver_manager installed driver at: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 22:00:46,754 - debug_agent - WARNING - webdriver_manager returned non-executable path: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32/THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 22:00:46,754 - debug_agent - INFO - Looking for chromedriver.exe in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32...
+2025-04-13 22:00:46,767 - debug_agent - INFO - Files in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32:
+2025-04-13 22:00:46,767 - debug_agent - INFO -   - chromedriver.exe
+2025-04-13 22:00:46,770 - debug_agent - INFO -   - LICENSE.chromedriver
+2025-04-13 22:00:46,770 - debug_agent - INFO -   - THIRD_PARTY_NOTICES.chromedriver
+2025-04-13 22:00:46,770 - debug_agent - INFO - Searching in C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32:
+2025-04-13 22:00:46,770 - debug_agent - INFO -   - chromedriver.exe
+2025-04-13 22:00:46,770 - debug_agent - INFO - Found chromedriver.exe at: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 22:00:46,770 - debug_agent - INFO - Testing if chromedriver is executable: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 22:00:46,770 - debug_agent - INFO - File permissions: 33279
+2025-04-13 22:00:47,136 - debug_agent - INFO - ChromeDriver version output: ChromeDriver 135.0.7049.84 (6c019e56001911b3fd467e03bf68c435924d62f4-refs/branch-heads/7049@{#1778})
+
+2025-04-13 22:00:47,136 - debug_agent - INFO - ==== CREATING WEBDRIVER ====
+2025-04-13 22:00:47,136 - debug_agent - INFO - Using chromedriver_path: C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe
+2025-04-13 22:00:47,152 - debug_agent - INFO - Creating Chrome WebDriver...
+2025-04-13 22:00:47,184 - selenium.webdriver.common.service - DEBUG - Started executable: `C:\Users\felix\.wdm\drivers\chromedriver\win64\135.0.7049.84\chromedriver-win32\chromedriver.exe` in a child process with pid: 33344
+2025-04-13 22:00:47,702 - selenium.webdriver.remote.remote_connection - DEBUG - POST http://localhost:55021/session {"capabilities": {"firstMatch": [{}], "alwaysMatch": {"browserName": "chrome", "pageLoadStrategy": "normal", "goog:chromeOptions": {"extensions": [], "args": ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--headless"]}}}}
+2025-04-13 22:00:47,705 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:55021
+2025-04-13 22:00:50,045 - urllib3.connectionpool - DEBUG - http://localhost:55021 "POST /session HTTP/1.1" 200 0
+2025-04-13 22:00:50,045 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":{"capabilities":{"acceptInsecureCerts":false,"browserName":"chrome","browserVersion":"135.0.7049.85","chrome":{"chromedriverVersion":"135.0.7049.84 (6c019e56001911b3fd467e03bf68c435924d62f4-refs/branch-heads/7049@{#1778})","userDataDir":"C:\\Users\\felix\\AppData\\Local\\Temp\\scoped_dir33344_1985911591"},"fedcm:accounts":true,"goog:chromeOptions":{"debuggerAddress":"localhost:55024"},"networkConnectionEnabled":false,"pageLoadStrategy":"normal","platformName":"windows","proxy":{},"setWindowRect":true,"strictFileInteractability":false,"timeouts":{"implicit":0,"pageLoad":300000,"script":30000},"unhandledPromptBehavior":"dismiss and notify","webauthn:extension:credBlob":true,"webauthn:extension:largeBlob":true,"webauthn:extension:minPinLength":true,"webauthn:extension:prf":true,"webauthn:virtualAuthenticators":true},"sessionId":"48a82b64920535da23681ec944cc88bd"}} | headers=HTTPHeaderDict({'Content-Length': '882', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 22:00:50,045 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 22:00:50,047 - debug_agent - INFO - WebDriver successfully created!
+2025-04-13 22:00:50,048 - debug_agent - INFO - Testing browser with Google.com...
+2025-04-13 22:00:50,048 - selenium.webdriver.remote.remote_connection - DEBUG - POST http://localhost:55021/session/48a82b64920535da23681ec944cc88bd/url {"url": "https://www.google.com"}
+2025-04-13 22:00:52,240 - urllib3.connectionpool - DEBUG - http://localhost:55021 "POST /session/48a82b64920535da23681ec944cc88bd/url HTTP/1.1" 200 0
+2025-04-13 22:00:52,240 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 22:00:52,240 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 22:00:52,240 - selenium.webdriver.remote.remote_connection - DEBUG - GET http://localhost:55021/session/48a82b64920535da23681ec944cc88bd/title {}
+2025-04-13 22:00:52,477 - urllib3.connectionpool - DEBUG - http://localhost:55021 "GET /session/48a82b64920535da23681ec944cc88bd/title HTTP/1.1" 200 0
+2025-04-13 22:00:52,477 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":"Google"} | headers=HTTPHeaderDict({'Content-Length': '18', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 22:00:52,477 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 22:00:52,477 - debug_agent - INFO - Page title: Google
+2025-04-13 22:00:52,477 - selenium.webdriver.remote.remote_connection - DEBUG - DELETE http://localhost:55021/session/48a82b64920535da23681ec944cc88bd {}
+2025-04-13 22:00:52,637 - urllib3.connectionpool - DEBUG - http://localhost:55021 "DELETE /session/48a82b64920535da23681ec944cc88bd HTTP/1.1" 200 0
+2025-04-13 22:00:52,651 - selenium.webdriver.remote.remote_connection - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-04-13 22:00:52,651 - selenium.webdriver.remote.remote_connection - DEBUG - Finished Request
+2025-04-13 22:00:55,139 - debug_agent - INFO - WebDriver test successful!
+2025-04-13 22:00:55,139 - debug_agent - INFO - Updating status for incident 22 to 'completed'...
+2025-04-13 22:00:55,141 - urllib3.connectionpool - DEBUG - Starting new HTTP connection (1): localhost:8000
+2025-04-13 22:00:59,173 - debug_agent - ERROR - Error updating status: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /incidents/22 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002214DD93970>: Failed to establish a new connection: [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte'))
+2025-04-13 22:00:59,173 - debug_agent - INFO - ======== DEBUG DIRECT AGENT - END ========

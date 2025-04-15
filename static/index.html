@@ -436,7 +436,7 @@
       </div>
 
       <!-- Incidents List (sichtbar, wenn angemeldet) -->
-      <div id="incidents-container" class="mt-20 max-w-5xl mx-auto hidden">
+      <div id="incidents-container" class="mt-20 max-w-6xl mx-auto hidden">
         <h2 class="text-2xl font-bold mb-6 text-white border-b border-primary/20 pb-2 flex items-center" id="incidents-heading">
           <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -449,6 +449,7 @@
             <thead>
               <tr>
                 <th scope="col" class="py-4 px-6">Typ</th>
+                <th scope="col" class="py-4 px-6">Standort</th> <!-- Neue Spalte für Standort -->
                 <th scope="col" class="py-4 px-6">Datum</th>
                 <th scope="col" class="py-4 px-6">Uhrzeit</th>
                 <th scope="col" class="py-4 px-6">Status</th>
@@ -459,7 +460,7 @@
             <tbody id="incidents-table-body">
               <!-- Wird dynamisch gefüllt -->
               <tr>
-                <td colspan="6" class="py-6 px-6 text-center text-gray-400">Keine Vorfälle gefunden</td>
+                <td colspan="7" class="py-6 px-6 text-center text-gray-400">Keine Vorfälle gefunden</td>
               </tr>
             </tbody>
           </table>
@@ -725,7 +726,7 @@
     </div>
   </div>
 
-  <!-- DateTime Modal -->
+  <!-- DateTime Modal - VOLLSTÄNDIG ERSETZEN -->
   <div id="datetime-modal" class="modal" role="dialog" aria-labelledby="datetime-title" aria-hidden="true">
     <div class="glass p-8 rounded-xl w-full max-w-2xl mx-4 modal-content border border-primary/20 shadow-glass">
       <div class="flex justify-between items-center mb-6">
@@ -742,7 +743,7 @@
         <input type="hidden" id="datetime-csrf-token" name="csrf_token" value="">
         
         <!-- Date & Time Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
           <div>
             <label for="incident-date" class="block text-sm font-medium text-gray-200 mb-2">
               Datum der Tat <span class="text-red-500" aria-hidden="true">*</span>
@@ -761,11 +762,11 @@
           </div>
         </div>
 
-        <!-- Excel Upload Section -->
-        <div class="border-t border-primary/10 pt-6">
-          <label class="block text-sm font-medium text-gray-200 mb-4">
-            Optional: Excel-Datei für zusätzliche Informationen
-          </label>
+        <!-- E-Mail Upload Section -->
+        <div class="border-t border-primary/10 pt-6 mt-2">
+          <h3 class="block text-lg font-medium text-gray-200 mb-4">
+            E-Mail-Datei für automatische Datenextraktion
+          </h3>
           <div id="drop-zone" 
             class="relative flex flex-col items-center p-6 border-2 border-dashed 
               border-gray-600 rounded-lg hover:border-primary transition-colors cursor-pointer bg-black/30">
@@ -775,16 +776,18 @@
             </svg>
             <div class="text-center">
               <div class="flex text-sm text-gray-400 mb-2">
-                <label for="excel-upload" class="relative cursor-pointer">
-                  <span class="text-primary hover:text-secondary font-medium">Datei auswählen</span>
-                  <input id="excel-upload" name="excel-upload" type="file" class="sr-only" accept=".xlsx,.xls">
+                <label for="email-upload" class="relative cursor-pointer">
+                  <span class="text-primary hover:text-secondary font-medium">E-Mail-Datei auswählen</span>
+                  <input id="email-upload" name="email-upload" type="file" class="sr-only" 
+                        accept=".eml,.msg,.html,.txt">
                 </label>
                 <p class="pl-1">oder hier ablegen</p>
               </div>
-              <p class="text-xs text-gray-500">Unterstützte Formate: XLSX, XLS</p>
+              <p class="text-xs text-gray-500">Unterstützte Formate: EML, MSG, HTML, TXT</p>
             </div>
           </div>
           
+          <!-- File Info Container -->
           <div id="file-info" class="hidden mt-4 p-4 bg-black/50 rounded-lg border border-primary/10">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-3">
@@ -802,6 +805,50 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
+            </div>
+          </div>
+          
+          <!-- Extracted Data Preview -->
+          <div id="extracted-data-preview" class="hidden mt-4 border border-primary/20 rounded-lg overflow-hidden">
+            <div class="bg-primary/10 p-3 border-b border-primary/10">
+              <h4 class="text-primary font-medium">Extrahierte Daten</h4>
+            </div>
+            <div class="p-4 space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1">Erkanntes Datum</label>
+                  <div class="flex items-center">
+                    <span id="extracted-date" class="text-white font-medium"></span>
+                    <button type="button" id="use-extracted-date" 
+                        class="ml-2 text-primary hover:text-white text-sm hidden">
+                      Übernehmen
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1">Erkannte Uhrzeit</label>
+                  <div class="flex items-center">
+                    <span id="extracted-time" class="text-white font-medium"></span>
+                    <button type="button" id="use-extracted-time" 
+                        class="ml-2 text-primary hover:text-white text-sm hidden">
+                      Übernehmen
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Erkannter Standort</label>
+                <div class="flex items-center">
+                  <span id="extracted-location" class="text-white font-medium"></span>
+                  <div class="ml-2 text-xs text-gray-400" id="location-confidence"></div>
+                </div>
+                <input type="hidden" id="location-id" name="location_id" value="">
+              </div>
+              <div id="extraction-error" class="hidden">
+                <p class="text-sm text-red-400">
+                  Einige Daten konnten nicht automatisch erkannt werden. Bitte überprüfen und bei Bedarf manuell eintragen.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -966,6 +1013,11 @@
           <div class="glass p-4 rounded-lg bg-black/20">
             <h3 class="text-sm text-gray-400 mb-1">Zeit</h3>
             <p id="detail-time" class="text-lg font-medium text-white">-</p>
+          </div>
+          <!-- Neu: Standort anzeigen -->
+          <div class="glass p-4 rounded-lg bg-black/20">
+            <h3 class="text-sm text-gray-400 mb-1">Standort</h3>
+            <p id="detail-location" class="text-lg font-medium text-white">-</p>
           </div>
           <div class="glass p-4 rounded-lg bg-black/20">
             <h3 class="text-sm text-gray-400 mb-1">Vorfall ID</h3>

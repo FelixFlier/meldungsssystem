@@ -1,6 +1,6 @@
 """
 CRUD operations for database models with SQLAlchemy 2.0 API.
-Consistent use of synchronous functions for backward compatibility.
+Updated with location support and consistent use of synchronous functions for backward compatibility.
 """
 
 from sqlalchemy.exc import IntegrityError
@@ -66,6 +66,58 @@ def update_user(db, user_id: int, user_update: schemas.UserUpdate):
     db.refresh(db_user)
     return db_user
 
+# --- Location Operations (Synchronous) ---
+
+def get_location(db, location_id: int):
+    """Get a location by ID."""
+    return db.query(models.Location).filter(models.Location.id == location_id).first()
+
+def get_locations(db, skip: int = 0, limit: int = 100):
+    """Get all locations with pagination."""
+    return db.query(models.Location).offset(skip).limit(limit).all()
+
+def create_location(db, location: schemas.LocationCreate):
+    """Create a new location."""
+    db_location = models.Location(**location.dict())
+    db.add(db_location)
+    db.commit()
+    db.refresh(db_location)
+    return db_location
+
+def import_locations_from_excel(db, locations_data):
+    """
+    Import locations from Excel data.
+    
+    Args:
+        db: Database session
+        locations_data: List of location dictionaries
+    
+    Returns:
+        int: Number of imported locations
+    """
+    count = 0
+    for location_data in locations_data:
+        # Check if location already exists
+        existing = db.query(models.Location).filter(
+            models.Location.name == location_data['name'],
+            models.Location.city == location_data['city']
+        ).first()
+        
+        if not existing:
+            # Create new location
+            db_location = models.Location(
+                name=location_data['name'],
+                city=location_data['city'],
+                state=location_data['state'],
+                postal_code=location_data.get('postal_code'),
+                address=location_data.get('address')
+            )
+            db.add(db_location)
+            count += 1
+    
+    db.commit()
+    return count
+
 # --- Incident Operations (Synchronous) ---
 
 def get_incident(db, incident_id: int):
@@ -73,37 +125,87 @@ def get_incident(db, incident_id: int):
     return db.query(models.Incident).filter(models.Incident.id == incident_id).first()
 
 def create_incident(db, incident: schemas.IncidentCreate):
-    """Create a new incident."""
-    db_incident = models.Incident(
-        type=incident.type,
-        incident_date=incident.incident_date,
-        incident_time=incident.incident_time,
-        excel_data=incident.excel_data,
-        user_id=incident.user_id,
-        status="pending"
-    )
-    db.add(db_incident)
-    db.commit()
-    db.refresh(db_incident)
-    return db_incident
+    """Create a new incident with location support."""
+    try:
+        # Erstelle ein Dictionary aus dem Schema
+        incident_dict = incident.dict()
+        
+        # Entferne Felder, die nicht direkt im Modell definiert sind
+        incident_data = {k: v for k, v in incident_dict.items() if hasattr(models.Incident, k)}
+        
+        # Erstelle den Incident
+        db_incident = models.Incident(**incident_data)
+        db.add(db_incident)
+        db.commit()
+        db.refresh(db_incident)
+        
+        # WICHTIG: Nicht db_incident.location = location.name setzen, da dies eine Relation ist!
+        # Stattdessen sollten wir das location_id-Feld verwenden, was wir bereits tun
+        
+        return db_incident
+    except Exception as e:
+        db.rollback()
+        raise e
 
 def update_incident(db, incident_id: int, incident_update: schemas.IncidentUpdate):
     """Update an incident."""
-    db_incident = db.query(models.Incident).filter(models.Incident.id == incident_id).first()
-    if not db_incident:
-        return None
-    
-    update_data = incident_update.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_incident, key, value)
-    
-    db.commit()
-    db.refresh(db_incident)
-    return db_incident
+    try:
+        # Finde den Incident
+        db_incident = db.query(models.Incident).filter(models.Incident.id == incident_id).first()
+        if not db_incident:
+            return None
+        
+        # Erstelle ein Dictionary aus dem Update-Schema
+        update_data = incident_update.dict(exclude_unset=True)
+        
+        # Aktualisiere alle angegebenen Felder
+        for key, value in update_data.items():
+            # Bei location_id auch den location-Namen aktualisieren
+            if key == 'location_id' and value is not None:
+                location = db.query(models.Location).filter(models.Location.id == value).first()
+                if location:
+                    setattr(db_incident, 'location', location.name)
+            
+            setattr(db_incident, key, value)
+        
+        db.commit()
+        db.refresh(db_incident)
+        return db_incident
+    except Exception as e:
+        db.rollback()
+        raise e
 
+def delete_incident(db, incident_id: int):
+    """Delete an incident."""
+    try:
+        db_incident = db.query(models.Incident).filter(models.Incident.id == incident_id).first()
+        if not db_incident:
+            return False
+        
+        db.delete(db_incident)
+        db.commit()
+        return True
+    except:
+        db.rollback()
+        return False
+    
 def get_user_incidents(db, user_id: int, skip: int = 0, limit: int = 100):
-    """Get all incidents for a user."""
-    return db.query(models.Incident).filter(models.Incident.user_id == user_id).offset(skip).limit(limit).all()
+    """Get all incidents for a user with location information."""
+    return db.query(models.Incident).filter(
+        models.Incident.user_id == user_id
+    ).offset(skip).limit(limit).all()
+
+def count_user_incidents(db, user_id: int):
+    """Count total incidents for a user."""
+    return db.query(models.Incident).filter(
+        models.Incident.user_id == user_id
+    ).count()
+
+def get_incidents_by_status(db, status: str, skip: int = 0, limit: int = 100):
+    """Get incidents by status."""
+    return db.query(models.Incident).filter(
+        models.Incident.status == status
+    ).offset(skip).limit(limit).all()
 
 # --- Audit Log Operations (Synchronous) ---
 

@@ -1,8 +1,12 @@
 """
 Main application entry point for the Meldungssystem API.
 Sets up the FastAPI application, middleware, routes, and static serving.
+Updated with location support.
 """
 # uvicorn main:app --reload 
+#venv\Scripts\activate
+# http://127.0.0.1:8002
+#C:\Users\felix\AppData\Local\Programs\Python\Python313\python.exe -m uvicorn main:app --reload
 
 from fastapi import FastAPI, Depends, Request, Response
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +15,11 @@ from pathlib import Path
 from fastapi.exceptions import HTTPException
 import logging
 import os
+import pandas as pd
+import io 
+import traceback
+import models
+
    
 # Internal imports
 from database import engine, create_tables
@@ -22,6 +31,7 @@ from middleware import (
     RateLimitMiddleware
 )
 from routes import router as api_router
+import crud
 
 # Load configuration
 settings = get_settings()
@@ -101,6 +111,61 @@ async def get_favicon_svg():
 
 # --- Server Startup and Main Page ---
 
+async def initialize_locations():
+    """Initialize police locations from the included Excel file"""
+    try:
+        # Create database synchronously
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from utils.db_utils import get_sync_session
+        
+        logger.info("Checking for existing locations...")
+        with get_sync_session() as db:
+            # Check if locations already exist
+            existing_count = db.query(models.Location).count()
+            if existing_count > 0:
+                logger.info(f"Found {existing_count} existing locations, skipping import")
+                return
+            
+            # Load from the police data Excel file
+            police_data_path = Path(settings.BASE_DIR) / "data" / "polizei_standorte.xlsx"
+            if not police_data_path.exists():
+                logger.warning(f"Police data file not found at {police_data_path}")
+                
+                # Create sample locations
+                sample_locations = [
+                    {"name": "Hessental", "city": "Schwäbisch Hall", "state": "Baden-Württemberg"},
+                    {"name": "Heilbronn", "city": "Heilbronn", "state": "Baden-Württemberg"},
+                    {"name": "Stuttgart Mitte", "city": "Stuttgart", "state": "Baden-Württemberg"},
+                    {"name": "Stuttgart Nord", "city": "Stuttgart", "state": "Baden-Württemberg"},
+                    {"name": "Stuttgart West", "city": "Stuttgart", "state": "Baden-Württemberg"},
+                    {"name": "Stuttgart Ost", "city": "Stuttgart", "state": "Baden-Württemberg"},
+                    {"name": "Stuttgart Süd", "city": "Stuttgart", "state": "Baden-Württemberg"},
+                    {"name": "Mannheim", "city": "Mannheim", "state": "Baden-Württemberg"},
+                    {"name": "Karlsruhe", "city": "Karlsruhe", "state": "Baden-Württemberg"},
+                    {"name": "Freiburg", "city": "Freiburg", "state": "Baden-Württemberg"},
+                ]
+                
+                # Import the sample locations
+                count = crud.import_locations_from_excel(db, sample_locations)
+                logger.info(f"Imported {count} sample locations")
+                return
+            
+            # Read Excel file
+            logger.info(f"Importing locations from {police_data_path}")
+            df = pd.read_excel(police_data_path)
+            
+            # Convert to list of dictionaries
+            locations_data = df.fillna('').to_dict('records')
+            
+            # Import locations
+            count = crud.import_locations_from_excel(db, locations_data)
+            logger.info(f"Imported {count} locations from police data file")
+    
+    except Exception as e:
+        logger.error(f"Error initializing locations: {str(e)}")
+        logger.error(traceback.format_exc())
+
 @app.on_event("startup")
 async def startup_event():
     """Wird beim Serverstart ausgeführt."""
@@ -118,6 +183,9 @@ async def startup_event():
             logger.warning(f"Creating missing directory: {dir_path}")
             dir_path.mkdir(parents=True, exist_ok=True)
     
+    # Initialize locations
+    await initialize_locations()
+    
     logger.info("Server-Startup abgeschlossen!") 
 
 @app.get("/", response_class=HTMLResponse)
@@ -130,16 +198,15 @@ async def read_root(request: Request):
             with open(index_path, 'r', encoding='utf-8') as f:
                 logger.info("Serving index.html from static directory")
                 return HTMLResponse(content=f.read())
-          
-        # Fallback to error page
-        logger.error(f"index.html not found at {index_path}")
-        return HTMLResponse(content=f"""
+        
+        # Fallback für API-Root (wenn index.html nicht gefunden wird)
+        return HTMLResponse(content="""
         <html>
-        <head><title>Fehler beim Laden der Seite</title></head>
+        <head><title>Meldungssystem API</title></head>
         <body style="font-family: sans-serif; background: #000; color: #fff; padding: 20px;">
-            <h1 style="color: #00C389;">Fehler beim Laden der Seite</h1>
-            <p>Die Anwendung konnte nicht geladen werden.</p>
-            <p>Bitte stellen Sie sicher, dass die Datei index.html im static-Verzeichnis existiert.</p>
+            <h1 style="color: #00C389;">Meldungssystem API</h1>
+            <p>Willkommen beim Meldungssystem. Die API ist aktiv.</p>
+            <p><a href="/docs" style="color: #00C389;">API-Dokumentation anzeigen</a></p>
         </body>
         </html>
         """)
@@ -168,7 +235,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
-        port=8000, 
+        port=8002, 
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower()
     )

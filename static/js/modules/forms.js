@@ -1,5 +1,5 @@
 /**
- * Forms Module
+ * Forms Module - Updated for Email Extraction
  * Handles form submissions, validation, and file uploads
  */
 
@@ -7,12 +7,14 @@ import { api } from './api.js';
 import { showToast, showFormError, clearFormError, hideModal, showModal } from './ui.js';
 import { processLogin } from './auth.js';
 import { submitIncident } from './incidents.js';
+import { parseEmailFile } from './email-parser.js';
 
 // Global CSRF token
 let csrfToken = '';
 
 // Global file storage
-let excelFile = null;
+let emailFile = null;
+let extractedData = null;
 
 /**
  * Fetch CSRF token from the server
@@ -77,6 +79,27 @@ export function setupFormHandlers() {
         console.log('Profile form handler set up');
     } else {
         console.warn('Profile form not found');
+    }
+    
+    // Setup "Use extracted date/time" buttons
+    const useExtractedDateBtn = document.getElementById('use-extracted-date');
+    if (useExtractedDateBtn) {
+        useExtractedDateBtn.addEventListener('click', () => {
+            if (extractedData && extractedData.date) {
+                document.getElementById('incident-date').value = extractedData.date;
+                useExtractedDateBtn.classList.add('hidden');
+            }
+        });
+    }
+    
+    const useExtractedTimeBtn = document.getElementById('use-extracted-time');
+    if (useExtractedTimeBtn) {
+        useExtractedTimeBtn.addEventListener('click', () => {
+            if (extractedData && extractedData.time) {
+                document.getElementById('incident-time').value = extractedData.time;
+                useExtractedTimeBtn.classList.add('hidden');
+            }
+        });
     }
 }
 
@@ -202,6 +225,10 @@ async function handleDatetimeSubmit(event) {
     const incidentType = form.querySelector('#incident-type').value;
     const incidentDate = form.querySelector('#incident-date').value;
     const incidentTime = form.querySelector('#incident-time').value;
+    const locationId = form.querySelector('#location-id').value || null;
+    
+    // Log für Debug-Zwecke
+    console.log('Submitting incident with locationId:', locationId);
     
     // Validierung
     if (!incidentDate || !incidentTime) {
@@ -209,21 +236,35 @@ async function handleDatetimeSubmit(event) {
         return;
     }
     
-    // Hole Excel-Daten, falls vorhanden
-    const excelData = localStorage.getItem('excel-data');
-    localStorage.removeItem('excel-data'); // Entferne aus localStorage
-    
     try {
-        // Submit incident
+        // Submit incident mit extrahierten Daten
         await submitIncident({
             type: incidentType,
             date: incidentDate,
             time: incidentTime,
-            excelData: excelData
+            locationId: parseInt(locationId), // Stellen Sie sicher, dass es eine Zahl ist, wenn vorhanden
+            // Optionale E-Mail-Daten als JSON-String
+            emailData: extractedData ? JSON.stringify(extractedData) : null
         });
         
         hideModal('datetime-modal');
         form.reset();
+        
+        // Zurücksetzen der globalen Variablen
+        emailFile = null;
+        extractedData = null;
+        
+        // Verstecken des Extraktions-Bereichs
+        const extractedDataPreview = document.getElementById('extracted-data-preview');
+        if (extractedDataPreview) {
+            extractedDataPreview.classList.add('hidden');
+        }
+        
+        // Verstecken des Datei-Info-Bereichs
+        const fileInfo = document.getElementById('file-info');
+        if (fileInfo) {
+            fileInfo.classList.add('hidden');
+        }
     } catch (error) {
         console.error('Incident submit error:', error);
         showFormError(errorElement, error.message || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
@@ -287,23 +328,23 @@ async function handleProfileSubmit(event) {
 }
 
 /**
- * Initialize drag and drop area for Excel uploads
+ * Initialize drag and drop area for email uploads
  */
 export function initializeUploadArea() {
     const dropZone = document.getElementById('drop-zone');
-    const fileUpload = document.getElementById('excel-upload');
+    const fileUpload = document.getElementById('email-upload');
     
     if (!dropZone || !fileUpload) {
         console.warn('Upload area elements not found');
         return;
     }
     
-    console.log('Setting up upload area');
+    console.log('Setting up upload area for emails');
     
     // File input change event
     fileUpload.addEventListener('change', function(e) {
         if (e.target.files.length > 0) {
-            handleExcelFile(e.target.files[0]);
+            handleEmailFile(e.target.files[0]);
         }
     });
     
@@ -332,27 +373,30 @@ export function initializeUploadArea() {
         this.classList.remove('border-primary');
         
         if (e.dataTransfer.files.length > 0) {
-            handleExcelFile(e.dataTransfer.files[0]);
+            handleEmailFile(e.dataTransfer.files[0]);
         }
     });
 }
 
 /**
- * Handle Excel file selection
- * @param {File} file The selected Excel file
+ * Handle uploaded email file
+ * @param {File} file - The uploaded email file
  */
-function handleExcelFile(file) {
-    console.log('Handling Excel file:', file.name);
+async function handleEmailFile(file) {
+    console.log('Handling email file:', file.name);
     
-    // Check if file is Excel
-    if (!file || (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls'))) {
-        showToast('Bitte wählen Sie eine gültige Excel-Datei (.xlsx, .xls)', 'error');
+    // Überprüfe, ob die Datei ein unterstütztes Format hat
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const supportedFormats = ['eml', 'msg', 'html', 'txt'];
+    
+    if (!supportedFormats.includes(fileExt)) {
+        showToast('Bitte wählen Sie eine unterstützte E-Mail-Datei (.eml, .msg, .html, .txt)', 'error');
         return;
     }
     
-    excelFile = file;
+    emailFile = file;
     
-    // Update UI
+    // Aktualisiere UI
     const fileInfo = document.getElementById('file-info');
     const fileName = document.getElementById('file-name');
     const fileSize = document.getElementById('file-size');
@@ -363,60 +407,167 @@ function handleExcelFile(file) {
         fileInfo.classList.remove('hidden');
     }
     
-    // Parse file
-    parseExcelFile(file);
+    // Zeige Ladeindikator
+    showToast('E-Mail wird analysiert...', 'info');
+    
+    try {
+        // Parse email file
+        const result = await parseEmailFile(file);
+        
+        if (result.success) {
+            // Speichere extrahierte Daten
+            extractedData = result;
+            
+            // Aktualisiere UI mit extrahierten Daten
+            updateExtractedDataPreview(result);
+            
+            showToast('E-Mail erfolgreich analysiert', 'success');
+        } else {
+            showToast('Fehler beim Analysieren der E-Mail: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error handling email file:', error);
+        showToast('Fehler beim Verarbeiten der E-Mail-Datei', 'error');
+    }
 }
 
 /**
- * Parse Excel file and store data in localStorage
- * @param {File} file The Excel file to parse
+ * Update the extracted data preview
+ * @param {Object} data - The extracted data
  */
-function parseExcelFile(file) {
-    const reader = new FileReader();
+function updateExtractedDataPreview(data) {
+    const previewContainer = document.getElementById('extracted-data-preview');
+    if (!previewContainer) return;
     
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
+    const dateElement = document.getElementById('extracted-date');
+    const timeElement = document.getElementById('extracted-time');
+    const locationElement = document.getElementById('extracted-location');
+    const locationConfidenceElement = document.getElementById('location-confidence');
+    const locationIdInput = document.getElementById('location-id');
+    const extractionErrorElement = document.getElementById('extraction-error');
+    
+    // "Übernehmen" Buttons
+    const useDateButton = document.getElementById('use-extracted-date');
+    const useTimeButton = document.getElementById('use-extracted-time');
+    
+    // Verstecke den Fehlertext standardmäßig
+    if (extractionErrorElement) {
+        extractionErrorElement.classList.add('hidden');
+    }
+    
+    // Datum anzeigen
+    if (dateElement) {
+        if (data.date) {
+            dateElement.textContent = formatDate(data.date);
             
-            // Make sure XLSX is defined
-            if (typeof XLSX === 'undefined') {
-                console.error('XLSX library not found. Make sure the SheetJS library is loaded.');
-                showToast('Excel-Verarbeitung nicht verfügbar. Bitte Administrator kontaktieren.', 'error');
-                return;
+            // Auch im Formular setzen, wenn vorhanden
+            const incidentDateInput = document.getElementById('incident-date');
+            if (incidentDateInput) {
+                incidentDateInput.value = data.date;
+                
+                // Datenübernahme-Button ausblenden, da bereits übernommen
+                if (useDateButton) {
+                    useDateButton.classList.add('hidden');
+                }
+            } else if (useDateButton) {
+                // Button anzeigen, wenn das Datum nicht automatisch übernommen wurde
+                useDateButton.classList.remove('hidden');
+            }
+        } else {
+            dateElement.textContent = 'Nicht erkannt';
+            if (extractionErrorElement) {
+                extractionErrorElement.classList.remove('hidden');
+            }
+        }
+    }
+    
+    // Zeit anzeigen
+    if (timeElement) {
+        if (data.time) {
+            timeElement.textContent = data.time;
+            
+            // Auch im Formular setzen, wenn vorhanden
+            const incidentTimeInput = document.getElementById('incident-time');
+            if (incidentTimeInput) {
+                incidentTimeInput.value = data.time;
+                
+                // Zeitübernahme-Button ausblenden, da bereits übernommen
+                if (useTimeButton) {
+                    useTimeButton.classList.add('hidden');
+                }
+            } else if (useTimeButton) {
+                // Button anzeigen, wenn die Zeit nicht automatisch übernommen wurde
+                useTimeButton.classList.remove('hidden');
+            }
+        } else {
+            timeElement.textContent = 'Nicht erkannt';
+            if (extractionErrorElement) {
+                extractionErrorElement.classList.remove('hidden');
+            }
+        }
+    }
+    
+    // Standort anzeigen
+    if (locationElement) {
+        if (data.location) {
+            locationElement.textContent = data.location;
+            
+            // Konfidenzwert anzeigen
+            if (locationConfidenceElement) {
+                const confidencePercentage = Math.round(data.confidence * 100);
+                locationConfidenceElement.textContent = `(${confidencePercentage}% Übereinstimmung)`;
+                
+                // Farbcodierung basierend auf Konfidenz
+                if (data.confidence > 0.8) {
+                    locationConfidenceElement.classList.add('text-green-400');
+                } else if (data.confidence > 0.5) {
+                    locationConfidenceElement.classList.add('text-yellow-400');
+                } else {
+                    locationConfidenceElement.classList.add('text-red-400');
+                }
             }
             
-            const workbook = XLSX.read(data, { type: 'array' });
-            
-            // Get first sheet
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            
-            // Convert to JSON
-            const jsonData = XLSX.utils.sheet_to_json(sheet);
-            
-            // Store in localStorage for later use
-            localStorage.setItem('excel-data', JSON.stringify(jsonData));
-            
-            showToast('Excel-Datei erfolgreich geladen', 'success');
-        } catch (error) {
-            console.error('Error parsing Excel file:', error);
-            showToast('Fehler beim Lesen der Excel-Datei', 'error');
+            // Standort-ID speichern
+            if (locationIdInput && data.locationId) {
+                locationIdInput.value = data.locationId;
+            }
+        } else {
+            locationElement.textContent = 'Nicht erkannt';
+            if (extractionErrorElement) {
+                extractionErrorElement.classList.remove('hidden');
+            }
         }
-    };
+    }
     
-    reader.onerror = function() {
-        showToast('Fehler beim Lesen der Datei', 'error');
-    };
-    
-    reader.readAsArrayBuffer(file);
+    // Vorschaubereich anzeigen
+    previewContainer.classList.remove('hidden');
 }
 
 /**
- * Remove the selected Excel file
+ * Format a date for display
+ * @param {string} dateStr - Date string in YYYY-MM-DD format
+ * @returns {string} Formatted date string in DD.MM.YYYY format
  */
-export function removeExcelFile() {
-    excelFile = null;
-    localStorage.removeItem('excel-data');
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    
+    try {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
+        return dateStr;
+    } catch (e) {
+        return dateStr;
+    }
+}
+
+/**
+ * Remove the selected email file
+ */
+export function removeEmailFile() {
+    emailFile = null;
+    extractedData = null;
     
     // Update UI
     const fileInfo = document.getElementById('file-info');
@@ -424,8 +575,20 @@ export function removeExcelFile() {
         fileInfo.classList.add('hidden');
     }
     
+    // Hide extracted data preview
+    const extractedDataPreview = document.getElementById('extracted-data-preview');
+    if (extractedDataPreview) {
+        extractedDataPreview.classList.add('hidden');
+    }
+    
+    // Reset location ID
+    const locationIdInput = document.getElementById('location-id');
+    if (locationIdInput) {
+        locationIdInput.value = '';
+    }
+    
     // Clear file input
-    const fileUpload = document.getElementById('excel-upload');
+    const fileUpload = document.getElementById('email-upload');
     if (fileUpload) {
         fileUpload.value = '';
     }
@@ -448,5 +611,5 @@ export default {
     fetchCsrfToken,
     setupFormHandlers,
     initializeUploadArea,
-    removeExcelFile
+    removeEmailFile
 };

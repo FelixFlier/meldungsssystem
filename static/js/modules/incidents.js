@@ -1,5 +1,5 @@
 /**
- * Incidents Module
+ * Incidents Module - Updated for Location Support
  * Handles incident creation, listing, and management
  */
 
@@ -100,7 +100,7 @@ export function displayIncidents(incidents) {
     if (!incidents || incidents.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="py-4 px-4 text-center text-gray-400">Keine Vorfälle gefunden</td>
+                <td colspan="7" class="py-4 px-4 text-center text-gray-400">Keine Vorfälle gefunden</td>
             </tr>
         `;
         return;
@@ -114,17 +114,26 @@ export function displayIncidents(incidents) {
         const row = document.createElement('tr');
         row.className = 'border-b border-primary/10 hover:bg-surface/50';
         
-        // Format date
+        // Format date - explizit die lokale Zeitzone berücksichtigen
         const createdAt = new Date(incident.created_at);
-        const formattedCreatedAt = createdAt.toLocaleDateString('de-DE') + ' ' + 
-                                  createdAt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        
+        // Korrigiere Zeitverschiebung
+        const localOffset = createdAt.getTimezoneOffset() * 60000; // Lokaler Offset in Millisekunden
+        const localCreatedAt = new Date(createdAt.getTime() - localOffset);
+        
+        const formattedCreatedAt = localCreatedAt.toLocaleDateString('de-DE') + ' ' + 
+                                  localCreatedAt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         
         // Determine status color
         const statusColor = getStatusClass(incident.status);
         const statusText = getStatusText(incident.status);
         
+        // Location display
+        const locationDisplay = incident.location ? incident.location : '-';
+        
         row.innerHTML = `
             <td class="py-3 px-4">${incident.type === 'diebstahl' ? 'Diebstahl' : 'Sachbeschädigung'}</td>
+            <td class="py-3 px-4">${locationDisplay}</td>
             <td class="py-3 px-4">${incident.incident_date}</td>
             <td class="py-3 px-4">${incident.incident_time}</td>
             <td class="py-3 px-4"><span class="${statusColor}">${statusText}</span></td>
@@ -242,16 +251,26 @@ export async function showIncidentDetails(incidentId) {
             'detail-id': incident.id
         };
         
+        // Add location if available
+        if (document.getElementById('detail-location')) {
+            document.getElementById('detail-location').textContent = incident.location || '-';
+        }
+        
         Object.entries(elements).forEach(([id, value]) => {
             const element = document.getElementById(id);
             if (element) element.textContent = value;
         });
         
-        // Format creation date
+        // Format creation date with timezone correction
         const createdDate = new Date(incident.created_at);
+        
+        // Korrigiere Zeitverschiebung für lokale Anzeige
+        const localOffset = createdDate.getTimezoneOffset() * 60000; // Lokaler Offset in Millisekunden
+        const localCreatedDate = new Date(createdDate.getTime() - localOffset);
+        
         const createdEl = document.getElementById('detail-created');
         if (createdEl) {
-            createdEl.textContent = `${createdDate.toLocaleDateString('de-DE')} ${createdDate.toLocaleTimeString('de-DE')}`;
+            createdEl.textContent = `${localCreatedDate.toLocaleDateString('de-DE')} ${localCreatedDate.toLocaleTimeString('de-DE')}`;
         }
         
         // Agent log, if available
@@ -318,13 +337,28 @@ export async function submitIncident(incidentData) {
             type: incidentData.type,
             incident_date: incidentData.date,
             incident_time: incidentData.time,
-            excel_data: incidentData.excelData
+            location_id: incidentData.locationId, // Stellen Sie sicher, dass der Name identisch ist
+            email_data: incidentData.emailData
         };
         
-        console.log('Submitting incident:', apiData);
+        console.log('Submitting incident data to API:', apiData);
         
         // Create incident
-        const result = await api.createIncident(apiData);
+        const response = await fetch('/incidents/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            },
+            body: JSON.stringify(apiData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Fehler beim Erstellen des Vorfalls');
+        }
+        
+        const result = await response.json();
         
         showToast("Vorgang wurde erfolgreich gestartet", "success");
         

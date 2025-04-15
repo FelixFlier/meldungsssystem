@@ -38,7 +38,8 @@ class Incident(Base):
     type = Column(String, nullable=False)
     incident_date = Column(String, nullable=False)
     incident_time = Column(String, nullable=False)
-    excel_data = Column(Text, nullable=True)
+    email_data = Column(Text, nullable=True)  # Neu: JSON-String mit extrahierten E-Mail-Daten
+    location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)  # Neu: Beziehung zu Location
     user_id = Column(Integer, ForeignKey("users.id"))
     status = Column(String, default="pending")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -46,6 +47,7 @@ class Incident(Base):
     agent_log = Column(Text, nullable=True)
     
     user = relationship("User", back_populates="incidents")
+    location = relationship("Location", back_populates="incidents")  # Neu: Beziehung zu Location
 
 
 class AuditLog(Base):
@@ -62,3 +64,19 @@ class AuditLog(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     
     user = relationship("User")
+
+
+class Location(Base):
+    """Standortmodell für die Datenbank"""
+    __tablename__ = "locations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, index=True)
+    city = Column(String, nullable=False)
+    state = Column(String, nullable=False)
+    postal_code = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    incidents = relationship("Incident", back_populates="location")  # Neu: Beziehung zu Incident

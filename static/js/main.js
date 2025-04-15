@@ -1,6 +1,7 @@
 /**
  * Main JavaScript for Meldungssystem
  * Application entry point that initializes and coordinates all modules
+ * Updated with email parsing support
  */
 
 // Global modules container
@@ -139,7 +140,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             loadModule('ui', './modules/ui.js'),
             loadModule('forms', './modules/forms.js'),
             loadModule('incidents', './modules/incidents.js'),
-            loadModule('animations', './modules/animations.js')
+            loadModule('animations', './modules/animations.js'),
+            loadModule('emailParser', './modules/email-parser.js')  // Neu: E-Mail-Parser-Modul
         ];
         
         // Wait for all modules to load (or fail)
@@ -237,11 +239,31 @@ function initializeEventListeners() {
                 if (modules.ui) modules.ui.hideModal(targetModal);
                 break;
             case 'remove-file':
-                if (modules.forms) modules.forms.removeExcelFile();
+                if (modules.forms) modules.forms.removeEmailFile();
                 break;
             case 'show-incident-details': 
                 const incidentId = actionElement.dataset.incidentId;
                 if (modules.incidents) modules.incidents.showIncidentDetails(incidentId);
+                break;
+            case 'use-extracted-date':
+                // Übernehme das extrahierte Datum
+                if (modules.forms) {
+                    const extractedDate = document.getElementById('extracted-date').textContent;
+                    if (extractedDate) {
+                        document.getElementById('incident-date').value = extractedDate;
+                        actionElement.classList.add('hidden');
+                    }
+                }
+                break;
+            case 'use-extracted-time':
+                // Übernehme die extrahierte Zeit
+                if (modules.forms) {
+                    const extractedTime = document.getElementById('extracted-time').textContent;
+                    if (extractedTime) {
+                        document.getElementById('incident-time').value = extractedTime;
+                        actionElement.classList.add('hidden');
+                    }
+                }
                 break;
             default:
                 console.log(`Unknown action: ${action}`);

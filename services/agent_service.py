@@ -15,156 +15,212 @@ from pathlib import Path
 import models
 import security
 from config import get_settings
+import crud
+# Cache explizit leeren
+get_settings.cache_clear()  
+# Einstellungen neu laden
+settings = get_settings()
 
 settings = get_settings()
 logger = logging.getLogger(settings.APP_NAME)
 
+# Ersetze die Methode run_agent_task in agent_service.py:
+
 async def run_agent_task(incident_id: int, incident_type: str):
     """
-    Runs the agent for an incident as a background task.
+    Führt den Agenten direkt im Background-Task aus, statt ihn als separaten Prozess zu starten.
     
     Args:
-        incident_id: The ID of the incident to process
-        incident_type: The type of incident (diebstahl, sachbeschaedigung)
+        incident_id: Die ID des Incidents
+        incident_type: Der Typ des Incidents (diebstahl, sachbeschaedigung)
     
     Returns:
-        bool: True if successful, False otherwise
+        bool: True bei Erfolg, False bei Fehler
     """
     try:
         logger.info(f"Starte Agent für Incident {incident_id} vom Typ {incident_type}")
         
-        # Bestimme Pfade und verifiziere ihre Existenz
-        agent_file = 'agents/diebstahl_agent.py' if incident_type == 'diebstahl' else 'agents/sachbeschaedigung_agent.py'
-        base_dir = Path(__file__).resolve().parent.parent
-        agent_path = base_dir / agent_file
-        
-        if not agent_path.exists():
-            error_msg = f"Agent-Datei nicht gefunden: {agent_path}"
-            logger.error(error_msg)
-            update_incident_status(incident_id, "error", error_msg)
-            return False
-        
-        # Pfade ausgeben für Diagnose
-        logger.info(f"Base directory: {base_dir}")
-        logger.info(f"Agent path: {agent_path}")
-        logger.info(f"Working directory: {os.getcwd()}")
-        
-        # Umgebungsvariablen für Python setzen
-        env = os.environ.copy()
-        env["PYTHONPATH"] = str(base_dir)
-        env["PYTHONUNBUFFERED"] = "1"  # Wichtig für unbuffered Output
-        env["INCIDENT_ID"] = str(incident_id)  # Incident-ID an den Agenten übergeben
-        env["API_HOST"] = "localhost:8000"  # Explizit den API-Host setzen
-        
-        # Generiere temporären API-Token für den Agenten (als File und als Env-Variable)
-        token = security.create_access_token(
-            data={"sub": "agent", "incident_id": incident_id}, 
-            expires_delta=timedelta(minutes=30)
-        )
-        env["API_TOKEN"] = token
-        
-        # Token auch in temporäre Datei schreiben
-        token_file = base_dir / f"token_{incident_id}.tmp"
-        with open(token_file, "w") as f:
-            f.write(token)
-        
-        logger.info(f"Token für Incident {incident_id} generiert und gespeichert")
-        
-        # Zusätzliche Incident-Informationen speichern für den Agenten
-        try:
-            from utils.db_utils import get_sync_session
-            with get_sync_session() as db:
-                incident = db.query(models.Incident).filter(models.Incident.id == incident_id).first()
-                if incident:
-                    incident_info = {
-                        "id": incident.id,
-                        "type": incident.type,
-                        "date": incident.incident_date,
-                        "time": incident.incident_time,
-                        "user_id": incident.user_id
-                    }
-                    
-                    # Speichere Incident-Informationen in temporärer Datei
-                    incident_file = base_dir / f"incident_{incident_id}.tmp"
-                    with open(incident_file, "w") as f:
-                        json.dump(incident_info, f)
-        except Exception as e:
-            logger.error(f"Fehler beim Speichern der Incident-Informationen: {str(e)}")
-        
-        # Aktualisiere den Status vor der Ausführung
+        # Aktualisiere Incident-Status zu Beginn
         update_incident_status(incident_id, "processing", "Agent wird gestartet...")
         
-        # Increased timeout to prevent premature termination
-        timeout = 300  # 5 minutes
-        
-        # Zusätzliche Kommandozeilenargumente für den Agenten
-        cmd_args = [
-            sys.executable,
-            str(agent_path),
-            str(incident_id),
-            "--token-file", str(token_file),
-            "--api-host", env["API_HOST"]
-        ]
-        
-        logger.info(f"Führe Befehl aus: {' '.join(cmd_args)}")
-        
-        # Führe den Agenten in einem separaten Prozess aus
-        process = subprocess.Popen(
-            cmd_args,
-            env=env,
-            cwd=str(base_dir),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,  # Line buffered
-        )
-        
-        logger.info(f"Agent-Prozess gestartet mit PID: {process.pid}")
-        
-        # Prozessausgabe nicht blockierend lesen
-        try:
-            stdout_data, stderr_data = process.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            # Kill process if it takes too long
-            process.kill()
-            stdout_data, stderr_data = process.communicate()
-            stderr_data += f"\nProcess killed after {timeout} seconds timeout."
-        
-        # Temporäre Dateien aufräumen
-        if token_file.exists():
-            token_file.unlink()
-        
-        incident_file = base_dir / f"incident_{incident_id}.tmp"
-        if incident_file.exists():
-            incident_file.unlink()
-        
-        # Speichere Ausgabe im Incident
-        log_data = f"---- AGENT LOG {datetime.now()} ----\n\nSTDOUT:\n{stdout_data}\n\nSTDERR:\n{stderr_data}"
-        update_incident_status(incident_id, status=None, agent_log=log_data)
-        
-        # Check exit code
-        if process.returncode != 0:
-            logger.error(f"Agent process failed with exit code {process.returncode}")
-            update_incident_status(incident_id, "error", log_data + "\n\nAgent beendet mit Fehlercode " + str(process.returncode))
+        if incident_type == "diebstahl":
+            # DIREKTE AUSFÜHRUNG statt subprocess
+            from direct_agent import DirectAgent
+            
+            # Erstelle DirectAgent-Instanz 
+            agent = DirectAgent(
+                incident_id=incident_id,
+                api_host="localhost:8002",  # Dieser Parameter wird jetzt ignoriert
+                headless=False,  # Headless-Modus für Hintergrundausführung
+                token=""  # Kein Token nötig, da wir direkte Funktionsaufrufe verwenden
+            )
+            
+            # Override der API-Methoden mit direkten Calls zum CRUD
+            # (dies ist ein Monkey-Patch der Agent-Klasse)
+            def direct_update_status(self, status, message=None):
+                """Direktes Update des Incident-Status ohne HTTP."""
+                try:
+                    logger.info(f"Direkte Aktualisierung des Status für Incident {self.incident_id} auf '{status}'")
+                    
+                    # Verwende die synchrone Funktion für Datenbankzugriff
+                    from utils.db_utils import get_sync_session
+                    from schemas import IncidentUpdate
+                    
+                    update_data = IncidentUpdate(status=status, agent_log=message)
+                    
+                    with get_sync_session() as db:
+                        updated = crud.update_incident(db, incident_id=self.incident_id, incident_update=update_data) 
+                        return bool(updated)
+                        
+                except Exception as e:
+                    logger.error(f"Fehler beim direkten Update des Status: {str(e)}")
+                    traceback.print_exc()
+                    return False
+                    
+            def direct_load_incident(self):
+                """Direktes Laden der Incident-Daten ohne HTTP."""
+                try:
+                    logger.info(f"Direktes Laden der Daten für Incident {self.incident_id}")
+                    
+                    # Verwende die synchrone Funktion für Datenbankzugriff
+                    from utils.db_utils import get_sync_session
+                    
+                    with get_sync_session() as db:
+                        incident = crud.get_incident(db, incident_id=self.incident_id)
+                        if not incident:
+                            logger.error(f"Incident {self.incident_id} nicht gefunden")
+                            return {}
+                            
+                        # Standortname extrahieren, falls vorhanden
+                        location_name = None
+                        if hasattr(incident, 'location') and incident.location:
+                            if isinstance(incident.location, models.Location):
+                                location_name = incident.location.name
+                            else:
+                                location_name = incident.location
+                        
+                        # Response-Objekt erstellen
+                        response_dict = {
+                            "id": incident.id,
+                            "type": incident.type,
+                            "incident_date": incident.incident_date,
+                            "incident_time": incident.incident_time,
+                            "email_data": incident.email_data,
+                            "location_id": incident.location_id,
+                            "user_id": incident.user_id,
+                            "status": incident.status,
+                            "created_at": incident.created_at,
+                            "location": location_name,
+                            "agent_log": incident.agent_log if hasattr(incident, 'agent_log') else None
+                        }
+                        
+                        return response_dict
+                        
+                except Exception as e:
+                    logger.error(f"Fehler beim direkten Laden der Incident-Daten: {str(e)}")
+                    traceback.print_exc()
+                    return {}
+                    
+            def direct_load_user(self, user_id):
+                """Direktes Laden der Benutzerdaten ohne HTTP."""
+                try:
+                    logger.info(f"Direktes Laden der Daten für Benutzer {user_id}")
+                    
+                    # Verwende die synchrone Funktion für Datenbankzugriff
+                    from utils.db_utils import get_sync_session
+                    
+                    with get_sync_session() as db:
+                        user = db.query(models.User).filter(models.User.id == user_id).first()
+                        if not user:
+                            logger.error(f"Benutzer {user_id} nicht gefunden")
+                            return {}
+                        
+                        # Manuelles Mapping der Benutzerdaten
+                        user_dict = {
+                            "id": user.id,
+                            "username": user.username,
+                            "nachname": user.nachname,
+                            "vorname": user.vorname,
+                            "geburtsdatum": user.geburtsdatum,
+                            "geburtsort": user.geburtsort,
+                            "geburtsland": user.geburtsland,
+                            "telefonnr": user.telefonnr,
+                            "email": user.email,
+                            "firma": user.firma,
+                            "ort": user.ort,
+                            "strasse": user.strasse,
+                            "hausnummer": user.hausnummer
+                        }
+                        
+                        return user_dict
+                        
+                except Exception as e:
+                    logger.error(f"Fehler beim direkten Laden der Benutzerdaten: {str(e)}")
+                    traceback.print_exc()
+                    return {}
+                    
+            def direct_load_location(self, location_id):
+                """Direktes Laden der Standortdaten ohne HTTP."""
+                try:
+                    logger.info(f"Direktes Laden der Daten für Standort {location_id}")
+                    
+                    # Verwende die synchrone Funktion für Datenbankzugriff
+                    from utils.db_utils import get_sync_session
+                    
+                    with get_sync_session() as db:
+                        location = db.query(models.Location).filter(models.Location.id == location_id).first()
+                        if not location:
+                            logger.error(f"Standort {location_id} nicht gefunden")
+                            return {}
+                        
+                        # Manuelles Mapping der Standortdaten
+                        location_dict = {
+                            "id": location.id,
+                            "name": location.name,
+                            "city": location.city,
+                            "state": location.state,
+                            "postal_code": location.postal_code,
+                            "address": location.address
+                        }
+                        
+                        return location_dict
+                        
+                except Exception as e:
+                    logger.error(f"Fehler beim direkten Laden der Standortdaten: {str(e)}")
+                    traceback.print_exc()
+                    return {}
+            
+            # Ersetze die HTTP-Methoden durch direkte Datenbankzugriffe
+            import types
+            agent.update_incident_status = types.MethodType(direct_update_status, agent)
+            agent.load_incident_data = types.MethodType(direct_load_incident, agent)
+            agent.load_user_data = types.MethodType(direct_load_user, agent)
+            agent.load_location_data = types.MethodType(direct_load_location, agent)
+            
+            # Führe den Agenten aus
+            logger.info("Starte direkten Agent ohne Subprocess")
+            success = agent.run()
+            
+            if success:
+                logger.info(f"Agent hat erfolgreich für Incident {incident_id} ausgeführt")
+                update_incident_status(incident_id, "completed", "Agent hat die Aufgabe erfolgreich abgeschlossen")
+            else:
+                logger.error(f"Agent Ausführung für Incident {incident_id} fehlgeschlagen")
+                update_incident_status(incident_id, "error", "Agent konnte die Aufgabe nicht abschließen")
+            
+            return success
+        else:
+            # Für andere Incident-Typen hier weitere Implementierungen hinzufügen
+            logger.warning(f"Kein Agent-Handler für Incident-Typ: {incident_type}")
+            update_incident_status(incident_id, "error", f"Kein Agent-Handler für Incident-Typ: {incident_type}")
             return False
-        
-        # Zeige Ausgabe an
-        if stdout_data:
-            logger.info(f'Agent Output:\n{stdout_data}')
-        if stderr_data:
-            logger.error(f'Agent Error:\n{stderr_data}')
-        
-        logger.info(f"Agent execution completed for incident {incident_id}")
-        update_incident_status(incident_id, "completed", log_data + "\n\nAgent erfolgreich abgeschlossen.")
-        return True
+            
     except Exception as e:
-        logger.error(f'Error running agent: {str(e)}')
-        traceback.print_exc()
+        error_msg = f"Fehler beim Ausführen des Agenten: {str(e)}"
+        logger.error(error_msg)
+        logger.error(traceback.format_exc())
         
-        # Update incident status to error with synchronous approach
-        error_msg = f"Fehler beim Ausführen des Agenten: {str(e)}\n{traceback.format_exc()}"
         update_incident_status(incident_id, "error", error_msg)
-        
         return False
 
 def update_incident_status(incident_id: int, status: str = None, agent_log: str = None):

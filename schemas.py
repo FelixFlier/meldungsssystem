@@ -1,9 +1,8 @@
-# Neue Datei: schemas.py
+# schemas.py
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 
-# In schemas.py hinzufügen:
 class IncidentUpdate(BaseModel):
     status: Optional[str] = None
     agent_log: Optional[str] = None
@@ -40,9 +39,9 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     id: int
-    created_at: datetime = None  # Erlaubt None-Werte
-    updated_at: Optional[datetime] = None  # Optional hinzufügen
-    is_active: Optional[bool] = True  # Optional hinzufügen
+    created_at: datetime = None
+    updated_at: Optional[datetime] = None
+    is_active: Optional[bool] = True
     
     class Config:
         from_attributes = True
@@ -63,16 +62,36 @@ class IncidentBase(BaseModel):
     type: str
     incident_date: str
     incident_time: str
-    excel_data: Optional[str] = None
+    email_data: Optional[str] = None
+    location_id: Optional[int] = None  # Explizit als Optional definieren
 
 class IncidentCreate(IncidentBase):
     user_id: Optional[int] = None
+    # location_id ist bereits in IncidentBase definiert
 
 class Incident(IncidentBase):
     id: int
     user_id: int
     status: str
     created_at: datetime
+    location: Optional[str] = None  # Name des Standorts (wird aus location_id abgeleitet)
+    
+    class Config:
+        from_attributes = True
+
+# Neue Schemas für Locations
+class LocationBase(BaseModel):
+    name: str
+    city: str
+    state: str
+    postal_code: Optional[str] = None
+    address: Optional[str] = None
+
+class LocationCreate(LocationBase):
+    pass
+
+class Location(LocationBase):
+    id: int
     
     class Config:
         from_attributes = True

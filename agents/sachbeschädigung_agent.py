@@ -6,6 +6,7 @@ import sys
 import traceback
 import logging
 import time
+import json
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -51,6 +52,14 @@ class SachbeschaedigungAgent(BaseAgent):
             if not user_data:
                 logger.warning("Keine Benutzerdaten gefunden, verwende Standardwerte")
             
+            # E-Mail-Daten anzeigen, falls vorhanden
+            if incident_data.get('email_data'):
+                try:
+                    email_data = json.loads(incident_data.get('email_data'))
+                    logger.info(f"E-Mail-Daten gefunden: {email_data}")
+                except:
+                    logger.warning("E-Mail-Daten konnten nicht geparst werden")
+            
             # Website öffnen
             self.driver.get("https://portal.onlinewache.polizei.de/de/")
             logger.info("Website geöffnet")
@@ -75,14 +84,50 @@ class SachbeschaedigungAgent(BaseAgent):
             logger.info("'in Deutschland' ausgewählt")
             time.sleep(1)
             
-            # Wähle Baden-Württemberg
-            state_element = self.wait_and_find_element(
-                By.XPATH, "//div[contains(@class, 'MuiBox-root') and .//img[@alt='Wappen Baden-Württemberg mit drei Löwen']]"
-            )
-            if not state_element or not self.safe_click(state_element):
-                logger.error("'Baden-Württemberg' nicht gefunden oder konnte nicht ausgewählt werden")
-                return False
-            logger.info("Baden-Württemberg ausgewählt")
+            # Wähle Bundesland basierend auf dem erkannten Standort
+            if self.location and self.location.get('state'):
+                state_name = self.location.get('state')
+                logger.info(f"Suche nach Bundesland: {state_name}")
+                
+                # Finde das passende Bundesland-Element
+                state_found = False
+                state_elements = self.driver.find_elements(By.XPATH, "//div[contains(@class, 'MuiBox-root') and .//img]")
+                
+                for element in state_elements:
+                    try:
+                        img = element.find_element(By.TAG_NAME, "img")
+                        alt_text = img.get_attribute("alt") if img else ""
+                        element_text = element.text
+                        
+                        if (state_name.lower() in alt_text.lower() or 
+                            state_name.lower() in element_text.lower()):
+                            if self.safe_click(element):
+                                logger.info(f"Bundesland '{state_name}' ausgewählt")
+                                state_found = True
+                                break
+                    except:
+                        continue
+                
+                if not state_found:
+                    # Fallback: Wähle Baden-Württemberg als Standard
+                    logger.warning(f"Bundesland '{state_name}' nicht gefunden, verwende Baden-Württemberg als Standard")
+                    state_element = self.wait_and_find_element(
+                        By.XPATH, "//div[contains(@class, 'MuiBox-root') and .//img[@alt='Wappen Baden-Württemberg mit drei Löwen']]"
+                    )
+                    if not state_element or not self.safe_click(state_element):
+                        logger.error("'Baden-Württemberg' nicht gefunden oder konnte nicht ausgewählt werden")
+                        return False
+            else:
+                # Fallback: Wähle Baden-Württemberg
+                logger.info("Kein Bundesland aus Standortdaten, verwende Baden-Württemberg")
+                state_element = self.wait_and_find_element(
+                    By.XPATH, "//div[contains(@class, 'MuiBox-root') and .//img[@alt='Wappen Baden-Württemberg mit drei Löwen']]"
+                )
+                if not state_element or not self.safe_click(state_element):
+                    logger.error("'Baden-Württemberg' nicht gefunden oder konnte nicht ausgewählt werden")
+                    return False
+                
+            logger.info("Bundesland ausgewählt")
             time.sleep(1)
             
             # Wähle Sachbeschädigung
@@ -120,6 +165,10 @@ class SachbeschaedigungAgent(BaseAgent):
             # Geburtsland ausfüllen
             geburtsland = user_data.get("geburtsland", "Deutschland") if user_data else "Deutschland"
             if not self.fill_geburtsland(geburtsland):
+                return False
+            
+            # Tatdaten ausfüllen
+            if not self.fill_incident_data(incident_data):
                 return False
             
             # Weitere Formularschritte für Sachbeschädigung
@@ -263,6 +312,129 @@ class SachbeschaedigungAgent(BaseAgent):
             return True
         except Exception as e:
             logger.error(f"Fehler beim Ausfüllen des Geburtslandes: {str(e)}")
+            traceback.print_exc()
+            return False
+    
+    def fill_incident_data(self, incident_data) -> bool:
+        """Füllt die Tatzeit- und Tatortdaten aus."""
+        try:
+            logger.info("Fülle Tatdaten aus...")
+            
+            # Weiter zu Tatdaten, falls notwendig
+            weiter_tatdaten_button = self.wait_and_find_element(
+                By.XPATH, "//div[@class='label'][contains(text(), 'Weiter zu: Tatdaten')]"
+            )
+            if weiter_tatdaten_button and self.safe_click(weiter_tatdaten_button):
+                logger.info("Zu Tatdaten weitergeleitet")
+                time.sleep(2)
+            
+            # Tatdatum eintragen
+            tatdatum_input = self.wait_and_find_element(By.ID, "tatzeit_datum_von-kendoInput")
+            if tatdatum_input:
+                # Formatiere Datum von YYYY-MM-DD zu DD.MM.YYYY
+                tatdatum = incident_data.get('incident_date', '')
+                if tatdatum:
+                    formatted_date = self.format_date(tatdatum)
+                    self.safe_send_keys(tatdatum_input, formatted_date)
+                    logger.info(f"Tatdatum eingetragen: {formatted_date}")
+            else:
+                logger.warning("Tatdatum-Feld nicht gefunden")
+            
+            # Tatzeit eintragen
+            tatzeit_input = self.wait_and_find_element(By.ID, "tatzeit_uhrzeit_von-kendoInput")
+            if tatzeit_input:
+                tatzeit = incident_data.get('incident_time', '')
+                if tatzeit:
+                    self.safe_send_keys(tatzeit_input, tatzeit)
+                    logger.info(f"Tatzeit eingetragen: {tatzeit}")
+            else:
+                logger.warning("Tatzeit-Feld nicht gefunden")
+            
+            # Tatort ausfüllen basierend auf Standortdaten
+            if self.location:
+                # Bundesland auswählen
+                bundesland_input = self.wait_and_find_element(By.ID, "tatort_bundesland-kendoInput")
+                if bundesland_input:
+                    bundesland = self.location.get('state', 'Baden-Württemberg')
+                    self.safe_send_keys(bundesland_input, bundesland)
+                    time.sleep(1)
+                    
+                    # Aus Dropdown auswählen
+                    try:
+                        list_item = self.wait_and_find_element(
+                            By.XPATH, f"//li[contains(@class, 'k-list-item') and .//span[contains(., '{bundesland}')]]",
+                            timeout=5
+                        )
+                        if list_item:
+                            self.safe_click(list_item)
+                            logger.info(f"Bundesland ausgewählt: {bundesland}")
+                    except:
+                        # Fallback: Enter drücken
+                        bundesland_input.send_keys("\n")
+                        logger.info(f"Bundesland eingegeben: {bundesland}")
+                
+                # Stadt/Ort ausfüllen
+                ort_input = self.wait_and_find_element(By.ID, "tatort_ort")
+                if ort_input:
+                    ort = self.location.get('city', '')
+                    if ort:
+                        self.safe_send_keys(ort_input, ort)
+                        logger.info(f"Tatort-Stadt eingetragen: {ort}")
+                
+                # PLZ ausfüllen, falls vorhanden
+                plz_input = self.wait_and_find_element(By.ID, "tatort_plz")
+                if plz_input:
+                    plz = self.location.get('postal_code', '')
+                    if plz:
+                        self.safe_send_keys(plz_input, plz)
+                        logger.info(f"Tatort-PLZ eingetragen: {plz}")
+                
+                # Straße ausfüllen, falls vorhanden
+                strasse_input = self.wait_and_find_element(By.ID, "tatort_strasse")
+                if strasse_input:
+                    adresse = self.location.get('address', '')
+                    if adresse:
+                        # Versuche, Straße und Hausnummer zu trennen
+                        parts = adresse.split(' ')
+                        if len(parts) > 1:
+                            # Hausnummer ist wahrscheinlich der letzte Teil
+                            strasse = ' '.join(parts[:-1])
+                            hausnummer = parts[-1]
+                            
+                            self.safe_send_keys(strasse_input, strasse)
+                            logger.info(f"Tatort-Straße eingetragen: {strasse}")
+                            
+                            # Hausnummer ausfüllen
+                            hausnummer_input = self.wait_and_find_element(By.ID, "tatort_hausnummer")
+                            if hausnummer_input:
+                                self.safe_send_keys(hausnummer_input, hausnummer)
+                                logger.info(f"Tatort-Hausnummer eingetragen: {hausnummer}")
+                        else:
+                            # Keine klare Trennung, alles als Straße verwenden
+                            self.safe_send_keys(strasse_input, adresse)
+                            logger.info(f"Tatort-Straße eingetragen: {adresse}")
+                    else:
+                        logger.warning("Keine Adressinformationen im Standort verfügbar")
+            
+            # Bei Abschnitt "Geschädigter" überprüfen, ob die eigenen Daten verwendet werden sollen
+            eigene_daten_radio = self.wait_and_find_element(
+                By.XPATH, "//input[@type='radio' and @name='geschaedigter_typ' and @value='1']"
+            )
+            if eigene_daten_radio and self.safe_click(eigene_daten_radio):
+                logger.info("Option 'Ich bin der Geschädigte' ausgewählt")
+            
+            # Weiter zum nächsten Abschnitt
+            weiter_button = self.wait_and_find_element(
+                By.XPATH, "//div[@class='label'][contains(text(), 'Weiter zu')]"
+            )
+            if weiter_button and self.safe_click(weiter_button):
+                logger.info("Zum nächsten Abschnitt weitergeleitet")
+                time.sleep(2)
+                
+            return True
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Ausfüllen der Tatdaten: {str(e)}")
             traceback.print_exc()
             return False
 

@@ -1,5 +1,5 @@
 /**
- * API Client Module
+ * API Client Module - Updated for Location Support
  * Centralized service for all API communication
  */
 
@@ -161,6 +161,35 @@ export const api = {
   checkAuthStatus: async () => {
     return request('/api/auth-status', {
       headers: getAuthHeader(),
+    });
+  },
+  
+  // --- Location endpoints ---
+  
+  /**
+   * Get all locations from the police database
+   * @returns {Promise<Array>} List of locations
+   */
+  getLocations: async () => {
+    return request('/api/locations', {
+      headers: {
+        ...defaultHeaders,
+        ...getAuthHeader()
+      },
+    });
+  },
+  
+  /**
+   * Get location by ID
+   * @param {number} id Location ID
+   * @returns {Promise<Object>} Location details
+   */
+  getLocationById: async (id) => {
+    return request(`/api/locations/${id}`, {
+      headers: {
+        ...defaultHeaders,
+        ...getAuthHeader()
+      },
     });
   },
   
