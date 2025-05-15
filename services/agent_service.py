@@ -111,7 +111,8 @@ async def run_agent_task(incident_id: int, incident_type: str):
                             "status": incident.status,
                             "created_at": incident.created_at,
                             "location": location_name,
-                            "agent_log": incident.agent_log if hasattr(incident, 'agent_log') else None
+                            "agent_log": incident.agent_log if hasattr(incident, 'agent_log') else None,
+                            "user_location_id": incident.user_location_id  # Diese Zeile hinzufügen
                         }
                         
                         return response_dict
@@ -184,18 +185,63 @@ async def run_agent_task(incident_id: int, incident_type: str):
                         }
                         
                         return location_dict
-                        
+                    
                 except Exception as e:
-                    logger.error(f"Fehler beim direkten Laden der Standortdaten: {str(e)}")
+                    logger.error(f"Fehler beim direkten Laden der Benutzer-Standortdaten: {str(e)}")
                     traceback.print_exc()
-                    return {}
+                    return None
+                
+            def direct_load_user_location(self, user_location_id):
+                """Direktes Laden der Benutzer-Standortdaten ohne HTTP."""
+                if not user_location_id: 
+                    logger.warning("No user location ID provided for loading data")
+                    return None
+                try:
+                    logger.info(f"Direktes Laden der Daten für Benutzer-Standort {user_location_id}")
+                    
+                    from utils.db_utils import get_sync_session
+                    
+                    with get_sync_session() as db:
+                        user_location = db.query(models.UserLocation).filter(
+                            models.UserLocation.id == user_location_id
+                        ).first()
+                        
+                        if not user_location:
+                            logger.error(f"Benutzer-Standort {user_location_id} nicht gefunden")
+                            return None
+                        
+                        # Manuelles Mapping der Benutzer-Standortdaten
+                        location_dict = {
+                            "id": user_location.id,
+                            "user_id": user_location.user_id,
+                            "name": user_location.name,
+                            "staat": user_location.staat,
+                            "bundesland": user_location.bundesland,
+                            "ort": user_location.ort,
+                            "strasse": user_location.strasse,
+                            "hausnummer": user_location.hausnummer,
+                            "zusatz_info": user_location.zusatz_info
+                        }
+                        
+                        # Wichtig: Logge die tatsächlichen Werte für die Straße und Hausnummer
+                        logger.info(f"Benutzer-Standort Straße: '{user_location.strasse}', Hausnummer: '{user_location.hausnummer}'")
+                        
+                        logger.info(f"Benutzer-Standort geladen: {location_dict}")
+                        return location_dict
+                            
+                except Exception as e:
+                    logger.error(f"Fehler beim direkten Laden der Benutzer-Standortdaten: {str(e)}")
+                    traceback.print_exc()
+                    return None
             
-            # Ersetze die HTTP-Methoden durch direkte Datenbankzugriffe
             import types
             agent.update_incident_status = types.MethodType(direct_update_status, agent)
             agent.load_incident_data = types.MethodType(direct_load_incident, agent)
             agent.load_user_data = types.MethodType(direct_load_user, agent)
             agent.load_location_data = types.MethodType(direct_load_location, agent)
+            
+            # WICHTIG: Füge die neue Methode hinzu!
+            agent.load_user_location_data = types.MethodType(direct_load_user_location, agent)
             
             # Führe den Agenten aus
             logger.info("Starte direkten Agent ohne Subprocess")

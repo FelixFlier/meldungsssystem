@@ -67,6 +67,7 @@ class IncidentBase(BaseModel):
 
 class IncidentCreate(IncidentBase):
     user_id: Optional[int] = None
+    user_location_id: Optional[int] = None  # NEU
     # location_id ist bereits in IncidentBase definiert
 
 class Incident(IncidentBase):
@@ -92,6 +93,38 @@ class LocationCreate(LocationBase):
 
 class Location(LocationBase):
     id: int
+    
+    class Config:
+        from_attributes = True
+        
+# Neue Schemas für UserLocation
+
+class UserLocationBase(BaseModel):
+    name: str
+    staat: str = "Deutschland"
+    bundesland: str
+    ort: str
+    strasse: str
+    hausnummer: str
+    zusatz_info: Optional[str] = None
+
+class UserLocationCreate(UserLocationBase):
+    pass
+
+class UserLocationUpdate(BaseModel):
+    name: Optional[str] = None
+    staat: Optional[str] = None
+    bundesland: Optional[str] = None
+    ort: Optional[str] = None
+    strasse: Optional[str] = None
+    hausnummer: Optional[str] = None
+    zusatz_info: Optional[str] = None
+
+class UserLocation(UserLocationBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True

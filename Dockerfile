@@ -20,7 +20,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
     && rm -rf /var/lib/apt/lists/*
 
 # Stellen sicher, dass Verzeichnisse existieren
-RUN mkdir -p /app/logs /app/static
+RUN mkdir -p /app/logs /app/static /app/data
 
 # Python-Abhängigkeiten installieren
 COPY requirements.txt .
@@ -34,9 +34,6 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/app:${PATH}" \
     PYTHONPATH="/app:${PYTHONPATH}"
-
-# Einfachen Gesundheitscheck-Endpunkt hinzufügen
-RUN echo -e 'from fastapi import FastAPI\n\n@app.get("/health")\ndef health_check():\n    return {"status": "ok"}' >> health_check.py
 
 # Exponieren des Ports
 EXPOSE 8000

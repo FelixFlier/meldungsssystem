@@ -28,6 +28,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     
     incidents = relationship("Incident", back_populates="user")
+    user_locations = relationship("UserLocation", back_populates="user", cascade="all, delete-orphan")
 
 
 class Incident(Base):
@@ -48,6 +49,8 @@ class Incident(Base):
     
     user = relationship("User", back_populates="incidents")
     location = relationship("Location", back_populates="incidents")  # Neu: Beziehung zu Location
+    user_location_id = Column(Integer, ForeignKey("user_locations.id"), nullable=True)
+    user_location = relationship("UserLocation", back_populates="incidents")
 
 
 class AuditLog(Base):
@@ -64,6 +67,25 @@ class AuditLog(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     
     user = relationship("User")
+    
+class UserLocation(Base):
+    """Benutzerdefinierte Tatort-Standorte"""
+    __tablename__ = "user_locations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String, nullable=False)  # z.B. "Büro Stuttgart"
+    staat = Column(String, default="Deutschland", nullable=False)
+    bundesland = Column(String, nullable=False)
+    ort = Column(String, nullable=False)
+    strasse = Column(String, nullable=False)
+    hausnummer = Column(String, nullable=False)
+    zusatz_info = Column(Text, nullable=True)  # z.B. "Im 24/7 Shop"
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    user = relationship("User", back_populates="user_locations")
+    incidents = relationship("Incident", back_populates="user_location")
 
 
 class Location(Base):

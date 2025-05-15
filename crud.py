@@ -133,14 +133,15 @@ def create_incident(db, incident: schemas.IncidentCreate):
         # Entferne Felder, die nicht direkt im Modell definiert sind
         incident_data = {k: v for k, v in incident_dict.items() if hasattr(models.Incident, k)}
         
+        # Füge user_location_id hinzu, falls vorhanden
+        if 'user_location_id' in incident_dict:
+            incident_data['user_location_id'] = incident_dict['user_location_id']
+        
         # Erstelle den Incident
         db_incident = models.Incident(**incident_data)
         db.add(db_incident)
         db.commit()
         db.refresh(db_incident)
-        
-        # WICHTIG: Nicht db_incident.location = location.name setzen, da dies eine Relation ist!
-        # Stattdessen sollten wir das location_id-Feld verwenden, was wir bereits tun
         
         return db_incident
     except Exception as e:
@@ -229,6 +230,59 @@ def create_audit_log(db, user_id: int, action: str, resource_type: str,
     db.add(db_log)
     db.commit()
     return db_log
+
+# --- User Location Operations (Synchronous) ---
+
+def get_user_location(db, location_id: int):
+    """Get a user location by ID."""
+    return db.query(models.UserLocation).filter(models.UserLocation.id == location_id).first()
+
+def get_user_locations(db, user_id: int, skip: int = 0, limit: int = 100):
+    """Get all locations for a user."""
+    return db.query(models.UserLocation).filter(
+        models.UserLocation.user_id == user_id
+    ).offset(skip).limit(limit).all()
+
+def create_user_location(db, location: schemas.UserLocationCreate, user_id: int):
+    """Create a new user location."""
+    db_location = models.UserLocation(
+        **location.dict(),
+        user_id=user_id
+    )
+    db.add(db_location)
+    db.commit()
+    db.refresh(db_location)
+    return db_location
+
+def update_user_location(db, location_id: int, location_update: schemas.UserLocationUpdate):
+    """Update a user location."""
+    db_location = db.query(models.UserLocation).filter(
+        models.UserLocation.id == location_id
+    ).first()
+    
+    if not db_location:
+        return None
+    
+    update_data = location_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_location, key, value)
+    
+    db.commit()
+    db.refresh(db_location)
+    return db_location
+
+def delete_user_location(db, location_id: int):
+    """Delete a user location."""
+    db_location = db.query(models.UserLocation).filter(
+        models.UserLocation.id == location_id
+    ).first()
+    
+    if not db_location:
+        return False
+    
+    db.delete(db_location)
+    db.commit()
+    return True
 
 # --- Legacy aliases for backward compatibility ---
 # These are just aliases to the functions above for code that might still be using them

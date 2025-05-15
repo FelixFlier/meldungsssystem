@@ -7,6 +7,7 @@ from pathlib import Path
 
 # Importiere die Modelle und CRUD-Funktionen
 from models import Base, Location  # Korrigiert: Location-Modell importieren
+from models import UserLocation
 import crud
 from schemas import LocationCreate
 
@@ -51,18 +52,12 @@ else:
     print(f"Excel-Datei nicht gefunden: {excel_path}")
     print("Erstelle einige Beispiel-Standorte...")
     
-    # Erstelle einige Beispiel-Standorte
-    sample_locations = [
-        {"name": "Hessental", "city": "Schwäbisch Hall", "state": "Baden-Württemberg"},
-        {"name": "Stuttgart Mitte", "city": "Stuttgart", "state": "Baden-Württemberg"}
-    ]
-    
     # Erstelle Session
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = SessionLocal()
     
     try:
-        count = crud.import_locations_from_excel(db, sample_locations)
+        count = crud.import_locations_from_excel(db)
         print(f"{count} Beispiel-Standorte erstellt")
     except Exception as e:
         print(f"Fehler beim Erstellen der Beispiel-Standorte: {e}")

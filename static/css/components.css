@@ -1102,3 +1102,165 @@ table tbody tr:hover {
   background: rgba(0, 0, 0, 0.2);
   transform: rotate(90deg);
 }
+
+/* =============================================
+   USER LOCATIONS SPECIFIC STYLES
+============================================= */
+
+/* User Location Management Styles */
+#user-locations-list {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 195, 137, 0.3) rgba(0, 0, 0, 0.1);
+}
+
+#user-locations-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+#user-locations-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+#user-locations-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 195, 137, 0.3);
+  border-radius: 4px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Location Item Cards */
+.location-item {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 195, 137, 0.1);
+}
+
+.location-item:hover {
+  border-color: rgba(0, 195, 137, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Location Tab Navigation */
+.location-tab-button {
+  position: relative;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 0.5rem;
+}
+
+.location-tab-button.active {
+  color: #00C389;
+  border-bottom-color: #00C389;
+}
+
+.location-tab-button:not(.active):hover {
+  color: #48DFB0;
+}
+
+/* Location Form Transitions */
+#user-location-form-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+#user-location-form-container.hidden {
+  animation: fadeOut 0.3s ease-out;
+}
+
+/* Location Preview Box */
+#user-location-preview {
+  transition: all 0.3s ease;
+  border-left: 3px solid #00C389;
+}
+
+#user-location-preview:not(.hidden) {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+      opacity: 0;
+      transform: translateY(-10px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+/* Location Selection Dropdown */
+#user-locations-dropdown option {
+  background: #0F1C21;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+#user-locations-dropdown option:hover {
+  background: rgba(0, 195, 137, 0.1);
+}
+
+/* Add Location Button */
+#add-location-btn {
+  transition: all 0.3s ease;
+}
+
+#add-location-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Location Form Fields */
+#user-location-form input,
+#user-location-form select,
+#user-location-form textarea {
+  transition: all 0.3s ease;
+}
+
+#user-location-form input:focus,
+#user-location-form select:focus,
+#user-location-form textarea:focus {
+  transform: translateY(-1px);
+}
+
+/* Location Delete Confirmation */
+.location-delete-confirm {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Tab Content Transitions */
+.location-tab {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.location-tab:not(.hidden) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.location-tab.hidden {
+  opacity: 0;
+  transform: translateY(10px);
+  position: absolute;
+  visibility: hidden;
+}
+
+/* Responsive Adjustments for Location Management */
+@media (max-width: 768px) {
+  #user-locations-list {
+      max-height: 300px;
+  }
+  
+  .location-item {
+      flex-direction: column;
+      gap: 0.5rem;
+  }
+  
+  .location-item .actions {
+      width: 100%;
+      justify-content: flex-end;
+  }
+}

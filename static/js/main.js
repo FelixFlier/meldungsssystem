@@ -1,3 +1,4 @@
+
 /**
  * Main JavaScript for Meldungssystem
  * Application entry point that initializes and coordinates all modules
@@ -25,6 +26,7 @@ async function loadModule(name, path) {
     try {
         const module = await import(path);
         modules[name] = module.default || module;
+        window.modules = modules;  // NEU
         console.log(`Module ${name} loaded successfully`);
         return true;
     } catch (error) {
@@ -141,6 +143,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             loadModule('forms', './modules/forms.js'),
             loadModule('incidents', './modules/incidents.js'),
             loadModule('animations', './modules/animations.js'),
+            loadModule('userLocations', './modules/user-locations.js'),
             loadModule('emailParser', './modules/email-parser.js')  // Neu: E-Mail-Parser-Modul
         ];
         
@@ -263,6 +266,19 @@ function initializeEventListeners() {
                         document.getElementById('incident-time').value = extractedTime;
                         actionElement.classList.add('hidden');
                     }
+                }
+                break;
+            case 'edit-user-location':
+                const locationId = actionElement.dataset.locationId;
+                if (modules.userLocations && modules.userLocations.userLocations) {
+                    const location = modules.userLocations.userLocations.find(l => l.id == locationId);
+                    if (location) modules.userLocations.showLocationForm(location);
+                }
+                break;
+            case 'delete-user-location':
+                const deleteId = actionElement.dataset.locationId;
+                if (modules.userLocations && confirm('Möchten Sie diesen Standort wirklich löschen?')) {
+                    modules.userLocations.deleteUserLocation(deleteId);
                 }
                 break;
             default:

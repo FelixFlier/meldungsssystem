@@ -42,6 +42,33 @@ export function showModal(modalId, data = {}) {
     } else if (modalId === 'profile-modal') {
         // Update profile display before showing
         updateProfileDisplay();
+        
+        // Modal anzeigen
+        modal.classList.add('active');
+        
+        // Kurze Verzögerung für DOM-Updates
+        setTimeout(() => {
+            // User locations laden
+            if (window.modules && window.modules.userLocations) {
+                window.modules.userLocations.loadUserLocations();
+            }
+            
+            // Event auslösen dass das Modal komplett geladen ist
+            setTimeout(() => {
+                document.dispatchEvent(new CustomEvent('profileModalReady', { 
+                    detail: { modalId: 'profile-modal' } 
+                }));
+            }, 100);
+        }, 200);
+        
+        return;
+    } else if (modalId === 'datetime-modal') {
+        // Nur noch Benutzer-Standorte laden
+        if (window.modules && window.modules.userLocations) {
+            window.modules.userLocations.loadUserLocations().then(() => {
+                window.modules.userLocations.renderUserLocationsDropdown();
+            });
+        }
     }
     
     // Show the modal

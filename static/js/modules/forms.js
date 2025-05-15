@@ -1,20 +1,23 @@
-/**
- * Forms Module - Updated for Email Extraction
- * Handles form submissions, validation, and file uploads
- */
-
+// 1. ALLE Imports am Anfang (nur einmal!)
 import { api } from './api.js';
 import { showToast, showFormError, clearFormError, hideModal, showModal } from './ui.js';
 import { processLogin } from './auth.js';
 import { submitIncident } from './incidents.js';
 import { parseEmailFile } from './email-parser.js';
+import { 
+    loadUserLocations, 
+    showLocationForm, 
+    hideLocationForm, 
+    saveUserLocation, 
+    deleteUserLocation, 
+    renderUserLocationsDropdown 
+} from './user-locations.js';
 
-// Global CSRF token
+// 2. Variablen
 let csrfToken = '';
-
-// Global file storage
 let emailFile = null;
 let extractedData = null;
+
 
 /**
  * Fetch CSRF token from the server
@@ -42,6 +45,8 @@ export async function fetchCsrfToken() {
 /**
  * Set up all form event handlers
  */
+// ... Imports bleiben wie gehabt ...
+
 export function setupFormHandlers() {
     console.log('Setting up form handlers');
     
@@ -50,8 +55,6 @@ export function setupFormHandlers() {
     if (loginForm) {
         loginForm.addEventListener('submit', handleLoginSubmit);
         console.log('Login form handler set up');
-    } else {
-        console.warn('Login form not found');
     }
     
     // Register form
@@ -59,8 +62,6 @@ export function setupFormHandlers() {
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegisterSubmit);
         console.log('Register form handler set up');
-    } else {
-        console.warn('Register form not found');
     }
     
     // Datetime form (incident creation)
@@ -68,8 +69,6 @@ export function setupFormHandlers() {
     if (datetimeForm) {
         datetimeForm.addEventListener('submit', handleDatetimeSubmit);
         console.log('Datetime form handler set up');
-    } else {
-        console.warn('Datetime form not found');
     }
     
     // Profile form
@@ -77,29 +76,122 @@ export function setupFormHandlers() {
     if (profileForm) {
         profileForm.addEventListener('submit', handleProfileSubmit);
         console.log('Profile form handler set up');
+    }
+    
+    // Setup user location handlers when profile modal is ready
+    document.addEventListener('profileModalReady', function(event) {
+        console.log('Profile modal ready event received');
+        setupUserLocationHandlers();
+    });
+}
+
+// Verbesserte setupUserLocationHandlers Funktion
+function setupUserLocationHandlers() {
+    console.log('Setting up user location handlers');
+    
+    // Direkt die Event-Handler setzen ohne Verzögerung
+    const addLocationBtn = document.getElementById('add-location-btn');
+    const cancelLocationBtn = document.getElementById('cancel-location-btn');
+    const userLocationForm = document.getElementById('user-location-form');
+    
+    console.log('Element check:', {
+        addBtn: !!addLocationBtn,
+        cancelBtn: !!cancelLocationBtn,
+        form: !!userLocationForm
+    });
+    
+    if (addLocationBtn) {
+        console.log('Found add location button');
+        
+        // Entferne alte Event-Listener
+        const newAddBtn = addLocationBtn.cloneNode(true);
+        addLocationBtn.parentNode.replaceChild(newAddBtn, addLocationBtn);
+        
+        newAddBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Add location button clicked');
+            if (window.modules && window.modules.userLocations) {
+                window.modules.userLocations.showLocationForm();
+            }
+        });
+    }
+    
+    if (cancelLocationBtn) {
+        console.log('Found cancel location button');
+        
+        // Entferne alte Event-Listener
+        const newCancelBtn = cancelLocationBtn.cloneNode(true);
+        cancelLocationBtn.parentNode.replaceChild(newCancelBtn, cancelLocationBtn);
+        
+        newCancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Cancel location button clicked');
+            if (window.modules && window.modules.userLocations) {
+                window.modules.userLocations.hideLocationForm();
+            }
+        });
+    }
+    
+    if (userLocationForm) {
+        console.log('Found user location form - setting up submit handler');
+        
+        // Entferne alte Event-Listener
+        const newForm = userLocationForm.cloneNode(true);
+        userLocationForm.parentNode.replaceChild(newForm, userLocationForm);
+        
+        newForm.addEventListener('submit', handleUserLocationSubmit);
     } else {
-        console.warn('Profile form not found');
+        console.log('User location form not found - will be initialized when shown');
+    }
+}
+
+// Handler für User Location Form Submit
+async function handleUserLocationSubmit(event) {
+    event.preventDefault();
+    console.log('User location form submitted');
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Convert FormData to object
+    const locationData = {};
+    for (let [key, value] of formData.entries()) {
+        locationData[key] = value;
     }
     
-    // Setup "Use extracted date/time" buttons
-    const useExtractedDateBtn = document.getElementById('use-extracted-date');
-    if (useExtractedDateBtn) {
-        useExtractedDateBtn.addEventListener('click', () => {
-            if (extractedData && extractedData.date) {
-                document.getElementById('incident-date').value = extractedData.date;
-                useExtractedDateBtn.classList.add('hidden');
-            }
-        });
-    }
+    console.log('Form data:', locationData);
     
-    const useExtractedTimeBtn = document.getElementById('use-extracted-time');
-    if (useExtractedTimeBtn) {
-        useExtractedTimeBtn.addEventListener('click', () => {
-            if (extractedData && extractedData.time) {
-                document.getElementById('incident-time').value = extractedData.time;
-                useExtractedTimeBtn.classList.add('hidden');
-            }
-        });
+    try {
+        if (window.modules && window.modules.userLocations) {
+            await window.modules.userLocations.saveUserLocation(locationData);
+        }
+    } catch (error) {
+        console.error('Error saving location:', error);
+        showToast('Fehler beim Speichern des Standorts', 'error');
+    }
+}
+/**
+ * Handle user location selection
+ */
+function handleUserLocationSelect(event) {
+    const select = event.target;
+    const selectedOption = select.options[select.selectedIndex];
+    const preview = document.getElementById('user-location-preview');
+    const previewContent = document.getElementById('location-preview-content');
+    
+    if (select.value && selectedOption.dataset.locationData) {
+        const location = JSON.parse(selectedOption.dataset.locationData);
+        
+        previewContent.innerHTML = `
+            <p><strong>${location.name}</strong></p>
+            <p>${location.strasse} ${location.hausnummer}</p>
+            <p>${location.ort}, ${location.bundesland}</p>
+            ${location.zusatz_info ? `<p class="text-sm">${location.zusatz_info}</p>` : ''}
+        `;
+        
+        preview.classList.remove('hidden');
+    } else {
+        preview.classList.add('hidden');
     }
 }
 
@@ -219,16 +311,14 @@ async function handleDatetimeSubmit(event) {
     const form = event.target;
     const errorElement = document.getElementById('datetime-error');
     
-    // Clear previous errors
     clearFormError(errorElement);
     
     const incidentType = form.querySelector('#incident-type').value;
     const incidentDate = form.querySelector('#incident-date').value;
     const incidentTime = form.querySelector('#incident-time').value;
-    const locationId = form.querySelector('#location-id').value || null;
     
-    // Log für Debug-Zwecke
-    console.log('Submitting incident with locationId:', locationId);
+    // Nur noch Benutzer-Standort
+    const userLocationId = form.querySelector('#user-locations-dropdown').value;
     
     // Validierung
     if (!incidentDate || !incidentTime) {
@@ -237,13 +327,11 @@ async function handleDatetimeSubmit(event) {
     }
     
     try {
-        // Submit incident mit extrahierten Daten
         await submitIncident({
             type: incidentType,
             date: incidentDate,
             time: incidentTime,
-            locationId: parseInt(locationId), // Stellen Sie sicher, dass es eine Zahl ist, wenn vorhanden
-            // Optionale E-Mail-Daten als JSON-String
+            userLocationId: userLocationId ? parseInt(userLocationId) : null,
             emailData: extractedData ? JSON.stringify(extractedData) : null
         });
         
@@ -606,7 +694,7 @@ function formatFileSize(bytes) {
     else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     else return (bytes / 1048576).toFixed(1) + ' MB';
 }
-
+// 4. Export statement am Ende
 export default {
     fetchCsrfToken,
     setupFormHandlers,

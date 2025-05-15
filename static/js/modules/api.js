@@ -255,6 +255,86 @@ export const api = {
     });
   },
   
+
+  // Fügen Sie diese Funktionen zum API-Objekt hinzu:
+
+// --- User Location endpoints ---
+
+/**
+ * Get all user locations
+ * @returns {Promise<Array>} List of user locations
+ */
+getUserLocations: async () => {
+  return request('/api/user-locations', {
+      headers: {
+          ...defaultHeaders,
+          ...getAuthHeader()
+      },
+  });
+},
+
+/**
+* Get specific user location
+* @param {number} id Location ID
+* @returns {Promise<Object>} Location details
+*/
+getUserLocationById: async (id) => {
+  return request(`/api/user-locations/${id}`, {
+      headers: {
+          ...defaultHeaders,
+          ...getAuthHeader()
+      },
+  });
+},
+
+/**
+* Create a new user location
+* @param {Object} locationData Location data
+* @returns {Promise<Object>} Created location
+*/
+createUserLocation: async (locationData) => {
+  return request('/api/user-locations', {
+      method: 'POST',
+      headers: {
+          ...defaultHeaders,
+          ...getAuthHeader(),
+      },
+      body: JSON.stringify(locationData),
+  });
+},
+
+/**
+* Update user location
+* @param {number} id Location ID
+* @param {Object} locationData Updated location data
+* @returns {Promise<Object>} Updated location
+*/
+updateUserLocation: async (id, locationData) => {
+  return request(`/api/user-locations/${id}`, {
+      method: 'PUT',
+      headers: {
+          ...defaultHeaders,
+          ...getAuthHeader(),
+      },
+      body: JSON.stringify(locationData),
+  });
+},
+
+/**
+* Delete user location
+* @param {number} id Location ID
+* @returns {Promise<Object>} Deletion confirmation
+*/
+deleteUserLocation: async (id) => {
+  return request(`/api/user-locations/${id}`, {
+      method: 'DELETE',
+      headers: {
+          ...defaultHeaders,
+          ...getAuthHeader(),
+      },
+  });
+},
+
   // --- Activities endpoints ---
   
   /**

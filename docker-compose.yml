@@ -1,22 +1,17 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8002:8000"  # Map to port 8002 to match your configuration
     volumes:
-      - ./:/app
-      - /app/venv  # Verhindert, dass lokales venv in den Container gemountet wird
-      - app_logs:/app/logs  # Speichert Logs in einem Volume
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/meldungssystem
-      - SECRET_KEY=${SECRET_KEY:-supersecretkey}
-      - DEBUG=False
-      - SELENIUM_HEADLESS=False
+      - ./data:/app/data  # For persistent data
+      - app_logs:/app/logs
     env_file:
-      - .env.prod
+      - .env  # Use your existing .env file
     depends_on:
       - db
     restart: always
@@ -34,27 +29,12 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-meldungssystem}
-    ports:
-      - "5432:5432"
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/ssl:/etc/nginx/ssl
-      - ./static:/usr/share/nginx/html/static
-    depends_on:
-      - app
-    restart: always
 
 volumes:
   postgres_data:

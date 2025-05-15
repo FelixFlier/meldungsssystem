@@ -4,6 +4,7 @@ Sets up the FastAPI application, middleware, routes, and static serving.
 Updated with location support.
 """
 # uvicorn main:app --reload 
+#uvicorn main:app --port 8002 --reload
 #venv\Scripts\activate
 # http://127.0.0.1:8002
 #C:\Users\felix\AppData\Local\Programs\Python\Python313\python.exe -m uvicorn main:app --reload
@@ -15,13 +16,13 @@ from pathlib import Path
 from fastapi.exceptions import HTTPException
 import logging
 import os
-import pandas as pd
-import io 
+import pandas as pd 
+import io  
 import traceback
 import models
-
-   
-# Internal imports
+     
+        
+# Internal imports    
 from database import engine, create_tables
 from config import get_settings
 from utils.log_config import setup_logging

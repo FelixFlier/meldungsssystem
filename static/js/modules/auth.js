@@ -19,7 +19,7 @@ export async function initAuth() {
     
     if (!savedToken || !savedUserId) {
         console.log("No saved token or user ID found");
-        updateUIForLoggedOutUser();  // Ensure UI is reset if not logged in
+        updateUIForLoggedOutUser();
         return false;
     }
     
@@ -36,7 +36,7 @@ export async function initAuth() {
             await loadUserProfile();
             
             // Update UI
-            updateUIForLoggedInUser();  // Explicitly call UI update here
+            updateUIForLoggedInUser();
             
             return true;
         } else {
@@ -57,6 +57,11 @@ export async function initAuth() {
  * @returns {Promise<boolean>} True if token is valid
  */
 export async function validateToken(token) {
+    if (!token) {
+        console.log('No token provided for validation');
+        return false;
+    }
+    
     try {
         // Use the auth status endpoint to validate token
         const response = await fetch('/api/auth-status', {
@@ -64,6 +69,13 @@ export async function validateToken(token) {
                 'Authorization': `Bearer ${token}`
             }
         });
+        
+        // Wenn 401, dann ist der Token ungültig
+        if (response.status === 401) {
+            console.log('Token is invalid (401)');
+            return false;
+        }
+        
         return response.ok;
     } catch (error) {
         console.error('Token validation error:', error);

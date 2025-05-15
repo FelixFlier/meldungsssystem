@@ -337,7 +337,8 @@ export async function submitIncident(incidentData) {
             type: incidentData.type,
             incident_date: incidentData.date,
             incident_time: incidentData.time,
-            location_id: incidentData.locationId, // Stellen Sie sicher, dass der Name identisch ist
+            location_id: incidentData.locationId,
+            user_location_id: incidentData.userLocationId, // NEU // Stellen Sie sicher, dass der Name identisch ist
             email_data: incidentData.emailData
         };
         
