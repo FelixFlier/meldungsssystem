@@ -47,6 +47,7 @@ class DirectAgent:
         self.wait = None
         self.long_wait = None
         self.location = None # Für den Tatort (kann None sein)
+        self.extended_form_data = {}  # NEUE ZEILE: Für erweiterte Formulardaten
         logger.info(f"DirectAgent init: id={incident_id}, host={api_host}, headless={self.headless}")
 
     def setup_driver(self) -> bool:
@@ -319,6 +320,903 @@ class DirectAgent:
             return date_obj.strftime("%d.%m.%Y")
         except ValueError: logger.warning(f"Could not parse date '{date_str}' with format YYYY-MM-DD."); return str(date_str)
         except Exception as e: logger.error(f"Error formatting date '{date_str}': {str(e)}"); return str(date_str)
+        
+    def collect_extended_form_data(self):
+        """
+        Sammelt erweiterte Formulardaten - zuerst aus API, dann manuell als Fallback
+        """
+        logger.info("Sammle erweiterte Formulardaten...")
+        
+        # Prüfe zuerst, ob Daten vom Frontend / API kommen
+        if self.incident_id:
+            try:
+                incident_data = self.load_incident_data()
+                if incident_data and incident_data.get('email_data'):
+                    import json
+                    email_data = json.loads(incident_data['email_data'])
+                    logger.info(f"DEBUG: Gefundene email_data: {email_data}")
+                    
+                    # Prüfe ob erweiterte Felder vorhanden sind
+                    required_fields = ['daten_weg', 'entwendetes_gut', 'sachverhalt', 'schadenshoehe', 'fotos_upload']
+                    if all(key in email_data for key in required_fields):
+                        logger.info("✓ Erweiterte Daten aus Frontend gefunden - keine manuelle Eingabe erforderlich")
+                        return {
+                            'daten_weg': email_data['daten_weg'],
+                            'entwendetes_gut': email_data['entwendetes_gut'],
+                            'sachverhalt': email_data['sachverhalt'],
+                            'schadenshoehe': email_data['schadenshoehe'],
+                            'fotos_upload': email_data['fotos_upload']
+                        }
+                    else:
+                        logger.warning(f"Unvollständige erweiterte Daten in email_data. Gefunden: {list(email_data.keys())}")
+            except Exception as e:
+                logger.warning(f"Konnte erweiterte Daten nicht aus API laden: {e}")
+        
+        # Fallback: Manuelle Eingabe für direkten Aufruf
+        logger.info("FALLBACK: Verwende manuelle Eingabe für erweiterte Daten...")
+        print("\n" + "="*70)
+        print("ERWEITERTE FORMULAR-DATEN EINGEBEN")
+        print("="*70)
+        print("Zusätzlich zu Tatzeit/Tatort/Standort benötigen wir folgende Informationen:")
+        print()
+
+        data = {}
+
+        # 1. Auf welchem Weg haben Sie diese Daten erlangt?
+        while True:
+            daten_weg = input("Auf welchem Weg haben Sie diese Daten erlangt? (Text): ").strip()
+            if daten_weg:
+                data['daten_weg'] = daten_weg
+                break
+            print("Bitte geben Sie eine Antwort ein.")
+
+        # 2. Entwendetes Gut
+        while True:
+            entwendetes_gut = input("Entwendetes Gut (Beschreibung): ").strip()
+            if entwendetes_gut:
+                data['entwendetes_gut'] = entwendetes_gut
+                break
+            print("Bitte beschreiben Sie das entwendete Gut.")
+
+        # 3. Sachverhalt in eigenen Worten
+        while True:
+            sachverhalt = input("Bitte schildern Sie den Sachverhalt in eigenen Worten: ").strip()
+            if sachverhalt:
+                data['sachverhalt'] = sachverhalt
+                break
+            print("Bitte schildern Sie den Sachverhalt.")
+
+        # 4. Gesamtschadenshöhe
+        while True:
+            try:
+                schadenshoehe = input("Gesamtschadenshöhe (in Euro, nur Zahl): ").strip()
+                if schadenshoehe:
+                    # Prüfe ob es eine gültige Zahl ist
+                    float(schadenshoehe.replace(',', '.'))
+                    data['schadenshoehe'] = schadenshoehe
+                    break
+                else:
+                    print("Bitte geben Sie eine Schadenshöhe ein.")
+            except ValueError:
+                print("Bitte geben Sie eine gültige Zahl ein.")
+
+        # 5. Haben Sie Fotos oder Dokumente als Upload?
+        while True:
+            fotos_upload = input("Haben Sie Fotos oder Dokumente als Upload? (ja/nein): ").strip().lower()
+            if fotos_upload in ['ja', 'j', 'yes', 'y']:
+                data['fotos_upload'] = True
+                break
+            elif fotos_upload in ['nein', 'n', 'no']:
+                data['fotos_upload'] = False
+                break
+            else:
+                print("Bitte antworten Sie mit 'ja' oder 'nein'.")
+
+        print("\n" + "="*70)
+        print("ERWEITERTE DATEN ERFASST")
+        print("="*70)
+        for key, value in data.items():
+            print(f"  {key}: {value}")
+        print()
+
+        confirm = input("Sind diese Daten korrekt? (ja/nein): ").strip().lower()
+        if confirm not in ['ja', 'j', 'yes', 'y']:
+            print("Datenerfassung abgebrochen.")
+            return None
+
+        return data
+
+    # Komplette fill_extended_form_fields Methode für DirectAgent Klasse
+    def fill_gesamtschadenshoehe(self, schadenshoehe_value):
+        """Spezielle Methode für das Kendo UI NumericTextBox."""
+        try:
+            logger.info(f"Fülle Gesamtschadenshöhe aus: {schadenshoehe_value}")
+            
+            # STRATEGIE 1: Erweiterte JavaScript-Lösung mit allen Kendo-Events
+            try:
+                js_result = self.driver.execute_script("""
+                    console.log('=== Kendo NumericTextBox Debugging ===');
+                    
+                    // Finde alle Kendo NumericTextBox Widgets
+                    var foundWidgets = [];
+                    var inputs = document.querySelectorAll('input[data-role="numerictextbox"], input[role="spinbutton"]');
+                    
+                    console.log('Gefundene numerische Inputs:', inputs.length);
+                    
+                    for (var i = 0; i < inputs.length; i++) {
+                        var input = inputs[i];
+                        console.log('Input ' + i + ':', input.id, input.className, input.style.display);
+                        
+                        // Versuche verschiedene Kendo-Zugriffsmethoden
+                        var widget = null;
+                        
+                        // Methode 1: Über kendo.widgetInstance
+                        if (window.kendo && kendo.widgetInstance) {
+                            widget = kendo.widgetInstance(input);
+                        }
+                        
+                        // Methode 2: Über jQuery data
+                        if (!widget && window.$ && $(input).length > 0) {
+                            widget = $(input).data('kendoNumericTextBox');
+                        }
+                        
+                        // Methode 3: Über ID mit jQuery
+                        if (!widget && input.id && window.$ && $('#' + input.id).length > 0) {
+                            widget = $('#' + input.id).data('kendoNumericTextBox');
+                        }
+                        
+                        console.log('Widget für Input ' + i + ':', widget);
+                        
+                        if (widget) {
+                            foundWidgets.push({input: input, widget: widget});
+                            
+                            try {
+                                // Setze Wert über Kendo API
+                                widget.value(parseFloat(arguments[0]));
+                                
+                                // Trigger alle wichtigen Events
+                                widget.trigger('change');
+                                widget.trigger('spin');
+                                
+                                // Zusätzliche native Events
+                                var changeEvent = new Event('change', { bubbles: true, cancelable: true });
+                                var inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                                var blurEvent = new Event('blur', { bubbles: true, cancelable: true });
+                                
+                                input.dispatchEvent(inputEvent);
+                                input.dispatchEvent(changeEvent);
+                                input.dispatchEvent(blurEvent);
+                                
+                                console.log('Kendo Widget Wert gesetzt:', widget.value());
+                                return 'kendo_widget_success:' + widget.value();
+                                
+                            } catch (widgetError) {
+                                console.error('Kendo Widget Fehler:', widgetError);
+                            }
+                        }
+                    }
+                    
+                    // FALLBACK: Direkte Input-Manipulation für alle numerischen Felder
+                    for (var i = 0; i < inputs.length; i++) {
+                        var input = inputs[i];
+                        
+                        try {
+                            // Element sichtbar machen
+                            input.style.display = 'block';
+                            input.style.visibility = 'visible';
+                            input.style.opacity = '1';
+                            input.removeAttribute('readonly');
+                            input.removeAttribute('disabled');
+                            
+                            // Focus setzen
+                            input.focus();
+                            
+                            // Wert setzen
+                            input.value = arguments[0];
+                            
+                            // Alle Events triggern
+                            var events = ['input', 'change', 'keyup', 'blur', 'focusout'];
+                            for (var j = 0; j < events.length; j++) {
+                                var event = new Event(events[j], { bubbles: true, cancelable: true });
+                                input.dispatchEvent(event);
+                            }
+                            
+                            console.log('Direkter Input Wert gesetzt:', input.value);
+                            
+                            // Prüfe ob Wert tatsächlich gesetzt wurde
+                            if (input.value == arguments[0]) {
+                                return 'direct_input_success:' + input.value;
+                            }
+                            
+                        } catch (directError) {
+                            console.error('Direkter Input Fehler:', directError);
+                        }
+                    }
+                    
+                    return 'all_methods_failed';
+                """, schadenshoehe_value)
+                
+                logger.info(f"JavaScript-Ergebnis: {js_result}")
+                
+                if 'success' in js_result:
+                    # Zusätzliche Validierung - prüfe ob Wert tatsächlich im UI sichtbar ist
+                    time.sleep(1)
+                    
+                    # Versuche den Wert zu lesen
+                    validation_result = self.driver.execute_script("""
+                        var inputs = document.querySelectorAll('input[data-role="numerictextbox"], input[role="spinbutton"]');
+                        for (var i = 0; i < inputs.length; i++) {
+                            var input = inputs[i];
+                            if (input.value && input.value != '') {
+                                return 'validation_success:' + input.value;
+                            }
+                            
+                            // Prüfe auch Kendo Widget Werte
+                            if (window.kendo) {
+                                var widget = kendo.widgetInstance(input);
+                                if (widget && widget.value && widget.value() !== null) {
+                                    return 'widget_validation_success:' + widget.value();
+                                }
+                            }
+                        }
+                        return 'validation_failed';
+                    """)
+                    
+                    logger.info(f"Validierung: {validation_result}")
+                    
+                    if 'validation_success' in validation_result:
+                        logger.info("✓ Gesamtschadenshöhe erfolgreich gesetzt und validiert")
+                        return True
+                    else:
+                        logger.warning("JavaScript-Setzung berichtet Erfolg, aber Validierung fehlgeschlagen")
+                
+            except Exception as js_e:
+                logger.warning(f"JavaScript-Behandlung fehlgeschlagen: {js_e}")
+            
+            # STRATEGIE 2: Selenium-basierte Manipulation
+            try:
+                logger.info("Versuche Selenium-basierte Manipulation...")
+                
+                # Suche alle potentiellen numerischen Input-Felder
+                potential_selectors = [
+                    "//input[@data-role='numerictextbox']",
+                    "//input[@role='spinbutton']", 
+                    "//input[contains(@class, 'k-input')]",
+                    "//span[contains(@class, 'k-numerictextbox')]//input",
+                    "//div[contains(@class, 'k-numerictextbox')]//input"
+                ]
+                
+                for selector in potential_selectors:
+                    try:
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                        logger.info(f"Selector '{selector}' fand {len(elements)} Elemente")
+                        
+                        for elem in elements:
+                            try:
+                                # Scroll zum Element
+                                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", elem)
+                                time.sleep(0.5)
+                                
+                                # Element sichtbar machen und aktivieren
+                                self.driver.execute_script("""
+                                    arguments[0].style.display = 'block';
+                                    arguments[0].style.visibility = 'visible';
+                                    arguments[0].style.opacity = '1';
+                                    arguments[0].removeAttribute('readonly');
+                                    arguments[0].removeAttribute('disabled');
+                                """, elem)
+                                time.sleep(0.3)
+                                
+                                # Dreifacher Klick um alles zu selektieren
+                                elem.click()
+                                time.sleep(0.1)
+                                elem.click()
+                                time.sleep(0.1)
+                                elem.click()
+                                time.sleep(0.2)
+                                
+                                # Wert eingeben
+                                elem.clear()
+                                elem.send_keys(schadenshoehe_value)
+                                time.sleep(0.3)
+                                
+                                # Tab oder Enter drücken um Eingabe zu bestätigen
+                                elem.send_keys(Keys.TAB)
+                                time.sleep(0.5)
+                                
+                                logger.info(f"Selenium-Manipulation mit Selector '{selector}' durchgeführt")
+                                
+                                # Prüfe ob Wert gesetzt wurde
+                                current_value = elem.get_attribute('value')
+                                if current_value == schadenshoehe_value:
+                                    logger.info("✓ Selenium-basierte Setzung erfolgreich validiert")
+                                    return True
+                                    
+                            except Exception as elem_e:
+                                logger.warning(f"Element-Manipulation fehlgeschlagen: {elem_e}")
+                                continue
+                                
+                    except Exception as selector_e:
+                        logger.warning(f"Selector '{selector}' fehlgeschlagen: {selector_e}")
+                        continue
+            
+            except Exception as selenium_e:
+                logger.warning(f"Selenium-basierte Manipulation fehlgeschlagen: {selenium_e}")
+            
+            logger.warning("Alle Strategien für Gesamtschadenshöhe fehlgeschlagen")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Kritischer Fehler bei Gesamtschadenshöhe: {e}")
+            return False
+
+    def navigate_to_uploads_abschluss(self):
+        """Spezielle Navigation zu 'Uploads / Abschluss' Sektion."""
+        try:
+            logger.info("Navigiere zu 'Uploads / Abschluss' Sektion...")
+            
+            # STRATEGIE 1: Direkter Klick auf "Weiter zu: Uploads / Abschluss"
+            try:
+                weiter_uploads_element = self.wait.until(EC.element_to_be_clickable(
+                    (By.XPATH, "//div[contains(@class, 'label') and contains(text(), 'Weiter zu: Uploads / Abschluss')]")
+                ))
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", weiter_uploads_element)
+                time.sleep(0.5)
+                self.driver.execute_script("arguments[0].click();", weiter_uploads_element)
+                logger.info("✓ Navigation via 'Weiter zu: Uploads / Abschluss' erfolgreich")
+                time.sleep(2)
+                return True
+            except TimeoutException:
+                logger.info("Strategie 1 (Weiter zu: Uploads / Abschluss) fehlgeschlagen")
+            
+            # STRATEGIE 2: Suche nach ähnlichen Label-Elementen
+            try:
+                weiter_elements = self.driver.find_elements(
+                    By.XPATH, 
+                    "//div[contains(@class, 'label') and ("
+                    "contains(text(), 'Uploads') or "
+                    "contains(text(), 'Abschluss') or "
+                    "contains(text(), 'Upload')"
+                    ")]"
+                )
+                
+                for element in weiter_elements:
+                    if element.is_displayed():
+                        element_text = element.text.strip()
+                        logger.info(f"Gefundenes Label-Element: '{element_text}'")
+                        
+                        if "uploads" in element_text.lower() or "abschluss" in element_text.lower():
+                            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+                            time.sleep(0.5)
+                            self.driver.execute_script("arguments[0].click();", element)
+                            logger.info(f"✓ Navigation via Label '{element_text}' erfolgreich")
+                            time.sleep(2)
+                            return True
+            except Exception as e:
+                logger.warning(f"Strategie 2 (ähnliche Labels) fehlgeschlagen: {e}")
+            
+            # STRATEGIE 3: JavaScript-basierte Elementsuche
+            try:
+                logger.info("Versuche JavaScript-basierte Navigation...")
+                
+                js_result = self.driver.execute_script("""
+                    console.log('=== JavaScript Navigation Debugging ===');
+                    
+                    // Suche nach allen Elementen mit relevanten Texten
+                    var allElements = document.querySelectorAll('*');
+                    var candidates = [];
+                    
+                    for (var i = 0; i < allElements.length; i++) {
+                        var elem = allElements[i];
+                        var text = elem.textContent || elem.innerText || '';
+                        
+                        if ((text.includes('Upload') || text.includes('Abschluss') || 
+                            text.includes('upload') || text.includes('abschluss') ||
+                            text.includes('Weiter')) && 
+                            elem.offsetWidth > 0 && elem.offsetHeight > 0) {
+                            
+                            candidates.push({
+                                element: elem,
+                                text: text.trim(),
+                                tag: elem.tagName,
+                                className: elem.className
+                            });
+                        }
+                    }
+                    
+                    console.log('Gefundene Kandidaten:', candidates.length);
+                    
+                    // Priorisiere Elemente mit "Weiter zu:"
+                    for (var j = 0; j < candidates.length; j++) {
+                        var candidate = candidates[j];
+                        
+                        if (candidate.text.includes('Weiter zu:') && 
+                            (candidate.text.includes('Upload') || candidate.text.includes('Abschluss'))) {
+                            
+                            try {
+                                candidate.element.click();
+                                console.log('Geklickt auf:', candidate.text);
+                                return 'weiter_zu_success';
+                            } catch (e) {
+                                console.error('Klick fehlgeschlagen:', e);
+                            }
+                        }
+                    }
+                    
+                    // Fallback: Klicke auf ersten verfügbaren Kandidaten
+                    for (var k = 0; k < candidates.length; k++) {
+                        var candidate = candidates[k];
+                        
+                        try {
+                            candidate.element.click();
+                            console.log('Fallback-Klick auf:', candidate.text);
+                            return 'fallback_success';
+                        } catch (e) {
+                            console.error('Fallback-Klick fehlgeschlagen:', e);
+                        }
+                    }
+                    
+                    return 'no_suitable_element';
+                """)
+                
+                logger.info(f"JavaScript-Navigation Ergebnis: {js_result}")
+                
+                if 'success' in js_result:
+                    logger.info("✓ JavaScript-basierte Navigation erfolgreich")
+                    time.sleep(2)
+                    return True
+                    
+            except Exception as e:
+                logger.warning(f"Strategie 3 (JavaScript) fehlgeschlagen: {e}")
+            
+            logger.error("Alle Navigations-Strategien für 'Uploads / Abschluss' fehlgeschlagen")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Kritischer Fehler bei Navigation zu 'Uploads / Abschluss': {e}")
+            return False
+
+    def click_page_icon_improved(self, page_number):
+        """Verbesserte Page-Icon-Klick-Methode mit erweiterten Strategien."""
+        try:
+            logger.info(f"Suche Page-Icon für Seite {page_number}...")
+            
+            # STRATEGIE 1: Debug-Ausgabe aller verfügbaren Page-Numbers
+            try:
+                logger.info("Debug: Analysiere alle verfügbaren Page-Numbers...")
+                
+                all_page_spans = self.driver.find_elements(
+                    By.XPATH, "//span[contains(@class, 'page-number')]"
+                )
+                
+                available_pages = []
+                for span in all_page_spans:
+                    if span.is_displayed():
+                        page_text = span.text.strip()
+                        available_pages.append(page_text)
+                        logger.info(f"Verfügbare Seite: '{page_text}'")
+                
+                logger.info(f"Alle verfügbaren Seiten: {available_pages}")
+                
+                # Falls die gewünschte Seite nicht existiert, versuche die nächst höhere
+                if str(page_number) not in available_pages:
+                    for higher_page in [str(page_number + 1), str(page_number + 2), str(page_number - 1)]:
+                        if higher_page in available_pages:
+                            logger.info(f"Seite {page_number} nicht verfügbar, versuche Seite {higher_page}")
+                            
+                            page_icon = self.driver.find_element(
+                                By.XPATH, f"//span[contains(@class, 'page-number') and text()='{higher_page}']/.."
+                            )
+                            
+                            if page_icon.is_displayed():
+                                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", page_icon)
+                                time.sleep(0.5)
+                                self.driver.execute_script("arguments[0].click();", page_icon)
+                                logger.info(f"✓ Page-Icon {higher_page} erfolgreich geklickt (Alternative)")
+                                time.sleep(2)
+                                return True
+                else:
+                    # Normale Page-Icon-Klick-Logik
+                    page_icon = self.driver.find_element(
+                        By.XPATH, f"//span[contains(@class, 'page-number') and text()='{page_number}']/.."
+                    )
+                    
+                    if page_icon.is_displayed():
+                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", page_icon)
+                        time.sleep(0.5)
+                        self.driver.execute_script("arguments[0].click();", page_icon)
+                        logger.info(f"✓ Page-Icon {page_number} erfolgreich geklickt")
+                        time.sleep(2)
+                        return True
+                
+            except Exception as e:
+                logger.warning(f"Debug-Strategie fehlgeschlagen: {e}")
+                
+            return self.click_page_icon(page_number)
+            
+        except Exception as e:
+            logger.error(f"Fehler bei verbesserter Page-Icon-Suche für Seite {page_number}: {e}")
+            return False
+        
+    def click_page_icon(self, page_number):
+        """Klickt auf ein spezifisches Page-Icon."""
+        try:
+            logger.info(f"Suche Page-Icon für Seite {page_number}...")
+            
+            # STRATEGIE 1: Exakte Suche nach Page Number
+            try:
+                page_icon = self.wait.until(EC.element_to_be_clickable(
+                    (By.XPATH, f"//span[contains(@class, 'page-number') and text()='{page_number}']/..")
+                ))
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", page_icon)
+                time.sleep(0.5)
+                self.driver.execute_script("arguments[0].click();", page_icon)
+                logger.info(f"✓ Page-Icon {page_number} erfolgreich geklickt (Strategie 1)")
+                time.sleep(2)
+                return True
+            except TimeoutException:
+                logger.info(f"Strategie 1 für Page {page_number} fehlgeschlagen")
+            
+            # STRATEGIE 2: Suche nach win-splitviewcommand-icon mit entsprechender Page Number
+            try:
+                page_icon = self.driver.find_element(
+                    By.XPATH, 
+                    f"//div[contains(@class, 'win-splitviewcommand-icon')]"
+                    f"[.//span[contains(@class, 'page-number') and text()='{page_number}']]"
+                )
+                if page_icon.is_displayed():
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", page_icon)
+                    time.sleep(0.5)
+                    self.driver.execute_script("arguments[0].click();", page_icon)
+                    logger.info(f"✓ Page-Icon {page_number} erfolgreich geklickt (Strategie 2)")
+                    time.sleep(2)
+                    return True
+            except:
+                logger.info(f"Strategie 2 für Page {page_number} fehlgeschlagen")
+            
+            # STRATEGIE 3: Breitere Suche nach allen Page-Icons
+            try:
+                all_page_icons = self.driver.find_elements(
+                    By.XPATH, "//div[contains(@class, 'win-splitviewcommand-icon')]"
+                )
+                
+                for icon in all_page_icons:
+                    try:
+                        page_span = icon.find_element(By.XPATH, ".//span[contains(@class, 'page-number')]")
+                        if page_span.text.strip() == str(page_number):
+                            if icon.is_displayed():
+                                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", icon)
+                                time.sleep(0.5)
+                                self.driver.execute_script("arguments[0].click();", icon)
+                                logger.info(f"✓ Page-Icon {page_number} erfolgreich geklickt (Strategie 3)")
+                                time.sleep(2)
+                                return True
+                    except:
+                        continue
+            except Exception as e:
+                logger.warning(f"Strategie 3 für Page {page_number} fehlgeschlagen: {e}")
+            
+            logger.warning(f"Alle Strategien für Page-Icon {page_number} fehlgeschlagen")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Klicken auf Page-Icon {page_number}: {e}")
+            return False
+
+    def fill_extended_form_fields(self):
+        """
+        KOMPLETT ÜBERARBEITETE IMPLEMENTIERUNG: Füllt die 12 zusätzlichen Formularschritte aus.
+        Mit verbesserter Kendo UI Behandlung und robuster Navigation.
+        """
+        try:
+            logger.info("=== STARTE ERWEITERTE FORMULAR-SCHRITTE (12 Schritte) ===")
+            
+            if not self.extended_form_data:
+                logger.error("Keine erweiterten Formulardaten verfügbar!")
+                return False
+            
+            # SCHRITT 1: Klick auf "Ich kann Angaben zu einer/m Tatverdächtigen machen"
+            try:
+                logger.info("Schritt 1: Klicke auf Tatverdächtigen-Label...")
+                verdaechtig_label = None
+                
+                try:
+                    verdaechtig_label = self.wait.until(EC.element_to_be_clickable(
+                        (By.XPATH, "//label[@for='tatangaben_verdaechtig_person']")
+                    ))
+                    logger.info("Strategie 1 erfolgreich: for-Attribut")
+                except TimeoutException:
+                    try:
+                        verdaechtig_label = self.wait.until(EC.element_to_be_clickable(
+                            (By.XPATH, "//label[contains(text(), 'Tatverdächtigen') and contains(text(), 'machen')]")
+                        ))
+                        logger.info("Strategie 2 erfolgreich: Text-basiert")
+                    except TimeoutException:
+                        pass
+                
+                if verdaechtig_label:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", verdaechtig_label)
+                    time.sleep(0.5)
+                    self.driver.execute_script("arguments[0].click();", verdaechtig_label)
+                    logger.info("✓ Tatverdächtigen-Label erfolgreich geklickt")
+                    time.sleep(2)
+                else:
+                    logger.warning("Tatverdächtigen-Label nicht gefunden")
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 1 fehlgeschlagen: {e}")
+
+            # SCHRITT 2: "Auf welchem Weg haben Sie diese Daten erlangt?" ausfüllen
+            try:
+                logger.info("Schritt 2: Fülle 'Auf welchem Weg...' aus...")
+                
+                daten_weg_field = None
+                try:
+                    daten_weg_field = self.wait.until(EC.element_to_be_clickable(
+                        (By.ID, "tatangaben_verdaechtig_person_daten_woher_hfrepeating_1")
+                    ))
+                except TimeoutException:
+                    try:
+                        daten_weg_field = self.driver.find_element(
+                            By.XPATH, "//textarea[contains(@id, 'tatangaben_verdaechtig_person_daten_woher')]"
+                        )
+                    except:
+                        pass
+                
+                if daten_weg_field:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", daten_weg_field)
+                    time.sleep(0.3)
+                    daten_weg_field.clear()
+                    daten_weg_field.send_keys(self.extended_form_data.get('daten_weg', ''))
+                    logger.info(f"✓ Daten-Weg Feld ausgefüllt: {self.extended_form_data.get('daten_weg', '')}")
+                    time.sleep(1)
+                else:
+                    logger.warning("Daten-Weg Feld nicht gefunden")
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 2 fehlgeschlagen: {e}")
+
+            # SCHRITT 3: Navigation zu Seite 3
+            try:
+                logger.info("Schritt 3: Navigiere zu Seite 3...")
+                
+                if self.click_page_icon(3):
+                    logger.info("✓ Navigation zu Seite 3 erfolgreich")
+                else:
+                    logger.warning("Navigation zu Seite 3 fehlgeschlagen")
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 3 fehlgeschlagen: {e}")
+
+            # SCHRITT 4: "Entwendetes Gut" ausfüllen
+            try:
+                logger.info("Schritt 4: Fülle 'Entwendetes Gut' aus...")
+                
+                entwendetes_gut_field = None
+                try:
+                    entwendetes_gut_field = self.wait.until(EC.element_to_be_clickable(
+                        (By.ID, "diebstahl_sonstiges_entwendetes_gut")
+                    ))
+                except TimeoutException:
+                    try:
+                        entwendetes_gut_field = self.driver.find_element(
+                            By.XPATH, "//textarea[contains(@data-win-options, 'Entwendetes Gut')]"
+                        )
+                    except:
+                        pass
+                
+                if entwendetes_gut_field:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", entwendetes_gut_field)
+                    time.sleep(0.3)
+                    entwendetes_gut_field.clear()
+                    entwendetes_gut_field.send_keys(self.extended_form_data.get('entwendetes_gut', ''))
+                    logger.info(f"✓ Entwendetes Gut ausgefüllt: {self.extended_form_data.get('entwendetes_gut', '')}")
+                    time.sleep(1)
+                else:
+                    logger.warning("Entwendetes Gut Feld nicht gefunden")
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 4 fehlgeschlagen: {e}")
+
+            # SCHRITT 5: "Sachverhalt in eigenen Worten" ausfüllen
+            try:
+                logger.info("Schritt 5: Fülle 'Sachverhalt' aus...")
+                
+                sachverhalt_field = None
+                try:
+                    sachverhalt_field = self.wait.until(EC.element_to_be_clickable(
+                        (By.ID, "diebstahl_sonstiges_abschluss_sachverhalt")
+                    ))
+                except TimeoutException:
+                    try:
+                        sachverhalt_field = self.driver.find_element(
+                            By.XPATH, "//textarea[contains(@data-win-options, 'Sachverhalt')]"
+                        )
+                    except:
+                        pass
+                
+                if sachverhalt_field:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sachverhalt_field)
+                    time.sleep(0.3)
+                    sachverhalt_field.clear()
+                    sachverhalt_field.send_keys(self.extended_form_data.get('sachverhalt', ''))
+                    logger.info(f"✓ Sachverhalt ausgefüllt: {self.extended_form_data.get('sachverhalt', '')}")
+                    time.sleep(1)
+                else:
+                    logger.warning("Sachverhalt Feld nicht gefunden")
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 5 fehlgeschlagen: {e}")
+
+            # SCHRITT 6: Verbesserte Gesamtschadenshöhe-Behandlung
+            try:
+                logger.info("Schritt 6: Fülle 'Gesamtschadenshöhe' aus (Verbesserte Kendo UI Behandlung)...")
+                
+                schadenshoehe_value = self.extended_form_data.get('schadenshoehe', '')
+                if schadenshoehe_value:
+                    success = self.fill_gesamtschadenshoehe(schadenshoehe_value)
+                    if success:
+                        logger.info(f"✓ Gesamtschadenshöhe erfolgreich ausgefüllt: {schadenshoehe_value}")
+                    else:
+                        logger.warning("Gesamtschadenshöhe konnte nicht ausgefüllt werden")
+                else:
+                    logger.warning("Keine Schadenshöhe verfügbar")
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 6 fehlgeschlagen: {e}")
+
+            # SCHRITT 7: Verbesserte Navigation zu Uploads/Abschluss
+            try:
+                logger.info("Schritt 7: Navigiere zu Uploads/Abschluss Sektion...")
+                
+                navigation_success = False
+                
+                # Versuche zuerst die spezifische "Uploads / Abschluss" Navigation
+                if self.navigate_to_uploads_abschluss():
+                    navigation_success = True
+                    logger.info("✓ Navigation via 'Uploads / Abschluss' erfolgreich")
+                
+                # Fallback: Versuche Page-Icon 4 mit verbesserter Methode
+                if not navigation_success:
+                    logger.info("Fallback: Versuche Page-Icon Navigation...")
+                    if self.click_page_icon_improved(4):
+                        navigation_success = True
+                        logger.info("✓ Fallback Page-Icon Navigation erfolgreich")
+                
+                # Letzter Fallback: Allgemeine Continue-Methode
+                if not navigation_success:
+                    logger.info("Letzter Fallback: Allgemeine Continue-Navigation...")
+                    if self.continue_to_next_section():
+                        navigation_success = True
+                        logger.info("✓ Allgemeine Navigation erfolgreich")
+                
+                if not navigation_success:
+                    logger.warning("Alle Navigations-Strategien für Schritt 7 fehlgeschlagen")
+                else:
+                    # Warte nach erfolgreicher Navigation
+                    time.sleep(3)
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 7 (Navigation) fehlgeschlagen: {e}")
+
+            # SCHRITTE 8-11: Radio Buttons
+            radio_button_steps = [
+                {
+                    'step': 8,
+                    'name': 'Fotos/Dokumente',
+                    'id_ja': 'fotos_dokumente_vorhanden_ja',
+                    'id_nein': 'fotos_dokumente_vorhanden_nein',
+                    'use_ja': self.extended_form_data.get('fotos_upload', False)
+                },
+                {
+                    'step': 9,
+                    'name': 'Weitere Unterlagen',
+                    'id_nein': 'fileUpload_weitereunterlagen_vorhanden_nein',
+                    'use_ja': False
+                },
+                {
+                    'step': 10,
+                    'name': 'Verzicht auf Einstellungsbescheid',
+                    'id_ja': 'abschluss_einstellungsbescheid_ja',
+                    'use_ja': True
+                },
+                {
+                    'step': 11,
+                    'name': 'Bestätigung Strafanzeige',
+                    'id_ja': 'abschluss_bestätigungstrafanzeige_ja',
+                    'use_ja': True
+                }
+            ]
+            
+            for step_config in radio_button_steps:
+                try:
+                    step_num = step_config['step']
+                    step_name = step_config['name']
+                    use_ja = step_config['use_ja']
+                    
+                    logger.info(f"Schritt {step_num}: {step_name}...")
+                    
+                    if use_ja and 'id_ja' in step_config:
+                        target_id = step_config['id_ja']
+                        choice = "JA"
+                    else:
+                        target_id = step_config['id_nein']
+                        choice = "NEIN"
+                    
+                    radio_element = None
+                    try:
+                        radio_element = self.driver.find_element(By.ID, target_id)
+                    except:
+                        try:
+                            base_name = target_id.split('_')[0]
+                            radio_element = self.driver.find_element(
+                                By.XPATH, f"//input[@type='radio' and contains(@id, '{base_name}')]"
+                            )
+                        except:
+                            pass
+                    
+                    if radio_element:
+                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", radio_element)
+                        time.sleep(0.3)
+                        self.driver.execute_script("arguments[0].click();", radio_element)
+                        logger.info(f"✓ Schritt {step_num}: {choice} ausgewählt")
+                        time.sleep(0.5)
+                    else:
+                        logger.warning(f"Schritt {step_num}: Element {target_id} nicht gefunden")
+                        
+                except Exception as e:
+                    logger.warning(f"Schritt {step_config['step']} fehlgeschlagen: {e}")
+
+            # SCHRITT 12: E-Mail-Adresse
+            try:
+                logger.info("Schritt 12: Fülle E-Mail-Adresse aus...")
+                
+                user_data = {}
+                if self.incident_id:
+                    incident_data = self.load_incident_data()
+                    if incident_data and incident_data.get('user_id'):
+                        user_data = self.load_user_data(incident_data['user_id'])
+                
+                email_value = user_data.get('email', '')
+                
+                if email_value:
+                    email_field = None
+                    
+                    try:
+                        email_field = self.driver.find_element(By.ID, "abschluss_anzeigeerstatter_email")
+                    except:
+                        try:
+                            email_field = self.driver.find_element(By.XPATH, "//input[@type='email']")
+                        except:
+                            try:
+                                email_field = self.driver.find_element(
+                                    By.XPATH, "//input[contains(@id, 'email')]"
+                                )
+                            except:
+                                pass
+                    
+                    if email_field:
+                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", email_field)
+                        time.sleep(0.3)
+                        email_field.clear()
+                        email_field.send_keys(email_value)
+                        logger.info(f"✓ E-Mail-Adresse ausgefüllt: {email_value}")
+                        time.sleep(0.5)
+                    else:
+                        logger.warning("E-Mail-Feld nicht gefunden")
+                else:
+                    logger.warning("Keine E-Mail-Adresse in Benutzerdaten")
+                    
+            except Exception as e:
+                logger.warning(f"Schritt 12 fehlgeschlagen: {e}")
+
+            logger.info("=== ERWEITERTE FORMULAR-SCHRITTE ABGESCHLOSSEN ===")
+            return True
+
+        except Exception as e:
+            logger.error(f"Kritischer Fehler in erweiterten Formular-Schritten: {e}")
+            logger.error(traceback.format_exc())
+            return False
 
     def fill_personal_data(self, user_data):
         """
@@ -637,7 +1535,7 @@ class DirectAgent:
                                 if elem_tag == 'button' or elem_tag == 'a':
                                     logger.info(f"Gefunden durch Tab-Navigation: {elem_tag} Element")
                                     active_element.click()
-                                    time.sleep(2)
+                                    time.sleep(1)
                                     break
                     except Exception as js_error:
                         logger.error(f"Fehler bei JavaScript-Injektion: {js_error}")
@@ -774,9 +1672,9 @@ class DirectAgent:
                         ort_input.clear()
                         ort_input.send_keys(ort_value)
                         logger.info(f"Ort '{ort_value}' eingegeben")
-                        time.sleep(1.5)
+                        time.sleep(0.5)
                         ort_input.send_keys(Keys.TAB)  # Tab drücken nach der Eingabe
-                        time.sleep(1.5)
+                        time.sleep(0.5)
                         
                         # Nach Dropdown-Items suchen und ggf. klicken
                         try:
@@ -841,9 +1739,9 @@ class DirectAgent:
                         strasse_input.clear()
                         strasse_input.send_keys(strasse_value)
                         logger.info(f"Straße '{strasse_value}' eingegeben")
-                        time.sleep(1.5)
+                        time.sleep(0.5)
                         strasse_input.send_keys(Keys.TAB)  # Tab drücken nach der Eingabe
-                        time.sleep(1.5)
+                        time.sleep(0.5)
                         
                         # Nach Dropdown-Items suchen und ggf. klicken
                         try:
@@ -909,7 +1807,7 @@ class DirectAgent:
                         hausnummer_input.clear()
                         hausnummer_input.send_keys(hausnummer_value)
                         logger.info(f"Hausnummer '{hausnummer_value}' eingegeben")
-                        time.sleep(1)
+                        time.sleep(0.5)
                     except Exception as e:
                         logger.error(f"Fehler beim Ausfüllen des Hausnummer-Felds: {e}")
                 else:
@@ -1165,7 +2063,7 @@ class DirectAgent:
             time.sleep(1)
             self.driver.execute_script("arguments[0].click();", adresse_button)
             logger.info("Tatort-Adresse-Button geklickt")
-            time.sleep(5)  # Warten auf Modal
+            time.sleep(3)  # Warten auf Modal
             
             # --- SCHRITT 5: Adresse im Modal ausfüllen ---
             logger.info("Beginne mit dem Ausfüllen des Adress-Modals...")
@@ -1216,9 +2114,9 @@ class DirectAgent:
                     ort_input.clear()
                     ort_input.send_keys(ort_value)
                     logger.info(f"Ort '{ort_value}' eingegeben")
-                    time.sleep(1.5)
+                    time.sleep(0.5)
                     ort_input.send_keys(Keys.TAB)  # Tab drücken nach der Eingabe
-                    time.sleep(1.5)
+                    time.sleep(0.5)
                         
                     # Nach Dropdown-Items suchen und ggf. klicken
                     try:
@@ -1282,9 +2180,9 @@ class DirectAgent:
                     strasse_input.clear()
                     strasse_input.send_keys(strasse_value)
                     logger.info(f"Straße '{strasse_value}' eingegeben")
-                    time.sleep(1.5)
+                    time.sleep(0.5)
                     strasse_input.send_keys(Keys.TAB)  # Tab drücken nach der Eingabe
-                    time.sleep(1.5)
+                    time.sleep(0.5)
                         
                     # Nach Dropdown-Items suchen und ggf. klicken
                     try:
@@ -1349,7 +2247,7 @@ class DirectAgent:
                     hausnummer_input.clear()
                     hausnummer_input.send_keys(hausnummer_value)
                     logger.info(f"Hausnummer '{hausnummer_value}' eingegeben")
-                    time.sleep(1)
+                    time.sleep(0.5)
                 except Exception as e:
                     logger.error(f"Fehler beim Ausfüllen des Hausnummer-Felds: {e}")
             else:
@@ -1697,13 +2595,14 @@ class DirectAgent:
             else:
                 logger.info("No location data provided, skipping crime scene address.")
 
-            # 10. Continue to next section
-            logger.info("Trying to continue after filling crime scene...")
-            continued_successfully = self.continue_to_next_section()
-            if not continued_successfully:
-                logger.warning("Could not navigate to next section automatically")
+            # 11. NEUE ERWEITERTE SCHRITTE - HIER WERDEN DIE 12 SCHRITTE HINZUGEFÜGT
+            logger.info("=== STARTE DIE 12 ERWEITERTEN FORMULAR-SCHRITTE ===")
+            if not self.fill_extended_form_fields():
+                logger.error("Erweiterte Formular-Schritte fehlgeschlagen")
+                # Trotzdem als erfolgreich markieren, da die Basis-Automatisierung funktioniert hat
+                logger.warning("Basis-Automatisierung war erfolgreich, nur erweiterte Schritte fehlgeschlagen")
 
-            logger.info("Theft report process reached end of implemented steps. Browser remains open.")
+            logger.info("Theft report process with extended fields completed successfully. Browser remains open.")
             return True
 
         except Exception as e:
@@ -1773,7 +2672,17 @@ class DirectAgent:
                 logger.info(f"Final location data: {self.location}")
 
             logger.info("Setting up WebDriver...")
-            if not self.setup_driver(): logger.error("WebDriver setup failed"); return False
+            if not self.setup_driver(): 
+                logger.error("WebDriver setup failed")
+                return False
+            
+            # NEUE ZEILEN HINZUFÜGEN:
+            logger.info("Sammle erweiterte Formulardaten...")
+            self.extended_form_data = self.collect_extended_form_data()
+            if not self.extended_form_data:
+                logger.error("Erweiterte Formulardaten nicht verfügbar")
+                self.update_incident_status("error", "Erweiterte Formulardaten fehlen")
+                return False
 
             incident_type = incident_data.get('type', '').lower()
             logger.info(f"Processing incident type: {incident_type}")

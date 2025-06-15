@@ -332,15 +332,45 @@ export async function submitIncident(incidentData) {
     showProgressBar();
     
     try {
+        // NEUE LOGIK: Kombiniere emailData und extendedData
+        let finalEmailData = incidentData.emailData;
+        
+        // Wenn erweiterte Daten vorhanden sind, kombiniere sie
+        if (incidentData.extendedData && Object.keys(incidentData.extendedData).length > 0) {
+            console.log('Processing extended data:', incidentData.extendedData);
+            
+            const combinedData = {};
+            
+            // Füge bestehende emailData hinzu, falls vorhanden
+            if (incidentData.emailData) {
+                try {
+                    const parsedEmailData = JSON.parse(incidentData.emailData);
+                    if (typeof parsedEmailData === 'object') {
+                        Object.assign(combinedData, parsedEmailData);
+                    }
+                } catch (e) {
+                    console.warn('Could not parse existing emailData:', e);
+                }
+            }
+            
+            // Füge erweiterte Daten hinzu
+            Object.assign(combinedData, incidentData.extendedData);
+            
+            finalEmailData = JSON.stringify(combinedData);
+            console.log('Combined email_data:', finalEmailData);
+        }
+        
         // Prepare API request data
         const apiData = {
             type: incidentData.type,
             incident_date: incidentData.date,
             incident_time: incidentData.time,
             location_id: incidentData.locationId,
-            user_location_id: incidentData.userLocationId, // NEU // Stellen Sie sicher, dass der Name identisch ist
-            email_data: incidentData.emailData
+            user_location_id: incidentData.userLocationId,
+            email_data: finalEmailData  // Verwende die kombinierten Daten
         };
+        
+        console.log('Submitting incident data to API:', apiData);
         
         console.log('Submitting incident data to API:', apiData);
         

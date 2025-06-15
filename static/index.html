@@ -726,171 +726,169 @@
     </div>
   </div>
 
-  <!-- DateTime Modal - VOLLSTÄNDIG ERSETZEN -->
+  <!-- DateTime Modal - VOLLSTÄNDIG ERWEITERT mit zusätzlichen Feldern -->
   <div id="datetime-modal" class="modal" role="dialog" aria-labelledby="datetime-title" aria-hidden="true">
-    <div class="glass p-8 rounded-xl w-full max-w-2xl mx-4 modal-content border border-primary/20 shadow-glass">
+    <div class="glass p-8 rounded-xl w-full max-w-4xl mx-4 modal-content border border-primary/20 shadow-glass">
       <div class="flex justify-between items-center mb-6">
-        <h2 id="datetime-title" class="text-xl font-bold text-primary">Tatzeit erfassen</h2>
+        <h2 id="datetime-title" class="text-xl font-bold text-primary">Tatzeit und Details erfassen</h2>
         <button data-action="close-modal" data-target="datetime-modal" class="text-gray-400 hover:text-white transition-colors" aria-label="Schließen">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
+      
       <form id="datetime-form" class="space-y-6">
         <input type="hidden" id="incident-type" name="type">
         <!-- CSRF-Token -->
         <input type="hidden" id="datetime-csrf-token" name="csrf_token" value="">
         
-        <form id="datetime-form" class="space-y-6">
-          <input type="hidden" id="incident-type" name="type">
-          <!-- CSRF-Token -->
-          <input type="hidden" id="datetime-csrf-token" name="csrf_token" value="">
-          
-          <!-- Date & Time Section -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-              <div>
-                  <label for="incident-date" class="block text-sm font-medium text-gray-200 mb-2">
-                      Datum der Tat <span class="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <input type="date" id="incident-date" name="incident_date"
-                      class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
-                      required aria-required="true">
-              </div>
-              <div>
-                  <label for="incident-time" class="block text-sm font-medium text-gray-200 mb-2">
-                      Uhrzeit der Tat <span class="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <input type="time" id="incident-time" name="incident_time"
-                      class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
-                      required aria-required="true">
-              </div>
-          </div>
-      
-          <!-- ERSETZEN Sie den gesamten Tatort-Abschnitt im datetime-modal mit: -->
-          <div class="border-t border-primary/10 pt-6">
-            <h3 class="text-lg font-medium text-gray-200 mb-4">Tatort auswählen</h3>
-            
-            <!-- Direkt das Benutzer-Standorte Dropdown ohne Tabs -->
+        <!-- Date & Time Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div>
-                <select id="user-locations-dropdown" name="user_location_id"
-                        class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700">
-                    <option value="">-- Standort wählen --</option>
-                    <!-- Wird dynamisch gefüllt -->
-                </select>
-                
-                <!-- Vorschau der ausgewählten Location -->
-                <div id="user-location-preview" class="hidden mt-4 p-4 bg-black/50 rounded-lg border border-primary/20">
-                    <h4 class="font-medium text-primary mb-2">Ausgewählter Standort:</h4>
-                    <div id="location-preview-content" class="text-gray-300">
-                        <!-- Wird dynamisch gefüllt -->
-                    </div>
-                </div>
-            </div>
-          </div>
-
-        <!-- E-Mail Upload Section -->
-        <div class="border-t border-primary/10 pt-6 mt-2">
-          <h3 class="block text-lg font-medium text-gray-200 mb-4">
-            E-Mail-Datei für automatische Datenextraktion
-          </h3>
-          <div id="drop-zone" 
-            class="relative flex flex-col items-center p-6 border-2 border-dashed 
-              border-gray-600 rounded-lg hover:border-primary transition-colors cursor-pointer bg-black/30">
-            <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 48 48">
-              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" 
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <div class="text-center">
-              <div class="flex text-sm text-gray-400 mb-2">
-                <label for="email-upload" class="relative cursor-pointer">
-                  <span class="text-primary hover:text-secondary font-medium">E-Mail-Datei auswählen</span>
-                  <input id="email-upload" name="email-upload" type="file" class="sr-only" 
-                        accept=".eml,.msg,.html,.txt">
+                <label for="incident-date" class="block text-sm font-medium text-gray-200 mb-2">
+                    Datum der Tat <span class="text-red-500" aria-hidden="true">*</span>
                 </label>
-                <p class="pl-1">oder hier ablegen</p>
-              </div>
-              <p class="text-xs text-gray-500">Unterstützte Formate: EML, MSG, HTML, TXT</p>
+                <input type="date" id="incident-date" name="incident_date"
+                    class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
+                    required aria-required="true">
             </div>
-          </div>
+            <div>
+                <label for="incident-time" class="block text-sm font-medium text-gray-200 mb-2">
+                    Uhrzeit der Tat <span class="text-red-500" aria-hidden="true">*</span>
+                </label>
+                <input type="time" id="incident-time" name="incident_time"
+                    class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
+                    required aria-required="true">
+            </div>
+        </div>
+    
+        <!-- Tatort Section -->
+        <div class="border-t border-primary/10 pt-6">
+          <h3 class="text-lg font-medium text-gray-200 mb-4">Tatort auswählen</h3>
           
-          <!-- File Info Container -->
-          <div id="file-info" class="hidden mt-4 p-4 bg-black/50 rounded-lg border border-primary/10">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                <div>
-                  <p class="text-sm font-medium text-gray-200" id="file-name"></p>
-                  <p class="text-xs text-gray-400" id="file-size"></p>
-                </div>
-              </div>
-              <button type="button" data-action="remove-file" 
-                class="text-gray-400 hover:text-white transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          
-          <!-- Extracted Data Preview -->
-          <div id="extracted-data-preview" class="hidden mt-4 border border-primary/20 rounded-lg overflow-hidden">
-            <div class="bg-primary/10 p-3 border-b border-primary/10">
-              <h4 class="text-primary font-medium">Extrahierte Daten</h4>
-            </div>
-            <div class="p-4 space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-400 mb-1">Erkanntes Datum</label>
-                  <div class="flex items-center">
-                    <span id="extracted-date" class="text-white font-medium"></span>
-                    <button type="button" id="use-extracted-date" 
-                        class="ml-2 text-primary hover:text-white text-sm hidden">
-                      Übernehmen
-                    </button>
+          <div>
+              <select id="user-locations-dropdown" name="user_location_id"
+                      class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700">
+                  <option value="">-- Standort wählen --</option>
+                  <!-- Wird dynamisch gefüllt -->
+              </select>
+              
+              <!-- Vorschau der ausgewählten Location -->
+              <div id="user-location-preview" class="hidden mt-4 p-4 bg-black/50 rounded-lg border border-primary/20">
+                  <h4 class="font-medium text-primary mb-2">Ausgewählter Standort:</h4>
+                  <div id="location-preview-content" class="text-sm text-gray-300">
+                      <!-- Wird dynamisch gefüllt -->
                   </div>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-400 mb-1">Erkannte Uhrzeit</label>
-                  <div class="flex items-center">
-                    <span id="extracted-time" class="text-white font-medium"></span>
-                    <button type="button" id="use-extracted-time" 
-                        class="ml-2 text-primary hover:text-white text-sm hidden">
-                      Übernehmen
-                    </button>
-                  </div>
-                </div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">Erkannter Standort</label>
-                <div class="flex items-center">
-                  <span id="extracted-location" class="text-white font-medium"></span>
-                  <div class="ml-2 text-xs text-gray-400" id="location-confidence"></div>
-                </div>
-                <input type="hidden" id="location-id" name="location_id" value="">
-              </div>
-              <div id="extraction-error" class="hidden">
-                <p class="text-sm text-red-400">
-                  Einige Daten konnten nicht automatisch erkannt werden. Bitte überprüfen und bei Bedarf manuell eintragen.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <div class="flex justify-end pt-6">
-          <button type="submit" 
-            class="creative-btn px-6 py-2 rounded-lg flex items-center space-x-2 
-              hover:shadow-lg hover:shadow-primary/25 transition-all">
-            <span>Weiter</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-            </svg>
-          </button>
+        <!-- NEUE SECTION: Erweiterte Tatdetails -->
+        <div class="border-t border-primary/10 pt-6">
+          <h3 class="text-lg font-medium text-gray-200 mb-4">Zusätzliche Informationen</h3>
+          
+          <!-- Auf welchem Weg haben Sie diese Daten erlangt? -->
+          <div class="mb-4">
+              <label for="daten-weg" class="block text-sm font-medium text-gray-200 mb-2">
+                  Auf welchem Weg haben Sie diese Daten erlangt? <span class="text-red-500">*</span>
+              </label>
+              <textarea id="daten-weg" name="daten_weg" rows="3" maxlength="500"
+                  class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
+                  placeholder="Beschreiben Sie, wie Sie zu den Informationen über den Tatverdächtigen gekommen sind..."
+                  required></textarea>
+              <div class="text-xs text-gray-400 mt-1">Maximal 500 Zeichen</div>
+          </div>
+
+          <!-- Entwendetes Gut -->
+          <div class="mb-4">
+              <label for="entwendetes-gut" class="block text-sm font-medium text-gray-200 mb-2">
+                  Entwendetes Gut <span class="text-red-500">*</span>
+              </label>
+              <textarea id="entwendetes-gut" name="entwendetes_gut" rows="3" maxlength="5000"
+                  class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
+                  placeholder="Beschreiben Sie detailliert, was entwendet wurde (Marke, Modell, Farbe, Besonderheiten...)"
+                  required></textarea>
+              <div class="text-xs text-gray-400 mt-1">Maximal 5000 Zeichen</div>
+          </div>
+
+          <!-- Sachverhalt in eigenen Worten -->
+          <div class="mb-4">
+              <label for="sachverhalt" class="block text-sm font-medium text-gray-200 mb-2">
+                  Bitte schildern Sie den Sachverhalt in eigenen Worten <span class="text-red-500">*</span>
+              </label>
+              <textarea id="sachverhalt" name="sachverhalt" rows="4" maxlength="5000"
+                  class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
+                  placeholder="Schildern Sie den gesamten Ablauf des Diebstahls möglichst detailliert..."
+                  required></textarea>
+              <div class="text-xs text-gray-400 mt-1">Maximal 5000 Zeichen</div>
+          </div>
+
+          <!-- Gesamtschadenshöhe -->
+          <div class="mb-4">
+              <label for="schadenshoehe" class="block text-sm font-medium text-gray-200 mb-2">
+                  Gesamtschadenshöhe (in Euro) <span class="text-red-500">*</span>
+              </label>
+              <input type="number" id="schadenshoehe" name="schadenshoehe" 
+                  min="0" max="999999999" step="0.01"
+                  class="w-full px-4 py-3 rounded-lg focus:border-primary text-white bg-black/50 border border-gray-700" 
+                  placeholder="z.B. 250.00"
+                  required>
+              <div class="text-xs text-gray-400 mt-1">Bitte geben Sie den Wert in Euro an (ohne €-Zeichen)</div>
+          </div>
+
+          <!-- Haben Sie Fotos oder Dokumente als Upload? -->
+          <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-200 mb-3">
+                  Haben Sie Fotos oder Dokumente als Upload? <span class="text-red-500">*</span>
+              </label>
+              <div class="flex space-x-4">
+                  <label class="flex items-center">
+                      <input type="radio" id="fotos-upload-ja" name="fotos_upload" value="true" 
+                          class="sr-only peer">
+                      <div class="w-4 h-4 border-2 border-gray-600 rounded-full peer-checked:border-primary peer-checked:bg-primary peer-checked:ring-2 peer-checked:ring-primary/50 transition-all"></div>
+                      <span class="ml-2 text-sm">Ja</span>
+                  </label>
+                  <label class="flex items-center">
+                      <input type="radio" id="fotos-upload-nein" name="fotos_upload" value="false" 
+                          class="sr-only peer">
+                      <div class="w-4 h-4 border-2 border-gray-600 rounded-full peer-checked:border-primary peer-checked:bg-primary peer-checked:ring-2 peer-checked:ring-primary/50 transition-all"></div>
+                      <span class="ml-2 text-sm">Nein</span>
+                  </label>
+              </div>
+          </div>
+
+          <!-- Hinweis für Fotos/Dokumente (wird bei "Ja" angezeigt) -->
+          <div id="fotos-hinweis" class="hidden mb-4 p-4 bg-amber-900/20 border border-amber-700/50 rounded-lg">
+              <div class="flex">
+                  <svg class="w-5 h-5 text-amber-400 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  </svg>
+                  <div>
+                      <h4 class="font-medium text-amber-300">Hinweis zu Dateien</h4>
+                      <p class="text-sm text-amber-200 mt-1">
+                          Das automatische Hochladen von Dateien durch Selenium ist technisch begrenzt. 
+                          Sie können die Dateien später manuell im Formular hochladen oder den Upload-Schritt überspringen.
+                      </p>
+                  </div>
+              </div>
+          </div>
         </div>
+
+        <!-- Submit Section -->
+        <div class="border-t border-primary/10 pt-6">
+          <div class="flex justify-end space-x-3">
+            <button type="button" data-action="close-modal" data-target="datetime-modal" 
+              class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+              Abbrechen
+            </button>
+            <button type="submit" class="creative-btn px-6 py-2 rounded-lg">
+              Automatisierung starten
+            </button>
+          </div>
+        </div>
+        
+        <!-- Error Message Container -->
         <div id="datetime-error" class="hidden text-red-400 text-sm bg-red-900/20 p-3 rounded-lg" role="alert"></div>
       </form>
     </div>

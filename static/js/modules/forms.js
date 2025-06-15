@@ -79,10 +79,14 @@ export function setupFormHandlers() {
     }
     
     // Setup user location handlers when profile modal is ready
+    // Setup user location handlers when profile modal is ready
     document.addEventListener('profileModalReady', function(event) {
         console.log('Profile modal ready event received');
         setupUserLocationHandlers();
     });
+    
+    // NEUE ZEILE: Setup extended form functionality
+    setupExtendedFormHandlers();
 }
 
 // Verbesserte setupUserLocationHandlers Funktion
@@ -320,10 +324,54 @@ async function handleDatetimeSubmit(event) {
     // Nur noch Benutzer-Standort
     const userLocationId = form.querySelector('#user-locations-dropdown').value;
     
-    // Validierung
+    // NEUE ERWEITERTE FELDER HINZUFÜGEN:
+    const datenWeg = form.querySelector('#daten-weg');
+    const entwendetesGut = form.querySelector('#entwendetes-gut');
+    const sachverhalt = form.querySelector('#sachverhalt');
+    const schadenshoehe = form.querySelector('#schadenshoehe');
+    const fotosUploadJa = form.querySelector('#fotos-upload-ja');
+    const fotosUploadNein = form.querySelector('#fotos-upload-nein');
+    
+    // Erweiterte Validierung
     if (!incidentDate || !incidentTime) {
         showFormError(errorElement, 'Bitte geben Sie Datum und Uhrzeit ein.');
         return;
+    }
+    
+    // Validierung der neuen Pflichtfelder
+    if (datenWeg && (!datenWeg.value || datenWeg.value.trim() === '')) {
+        showFormError(errorElement, 'Bitte geben Sie an, auf welchem Weg Sie die Daten erlangt haben.');
+        return;
+    }
+    
+    if (entwendetesGut && (!entwendetesGut.value || entwendetesGut.value.trim() === '')) {
+        showFormError(errorElement, 'Bitte beschreiben Sie das entwendete Gut.');
+        return;
+    }
+    
+    if (sachverhalt && (!sachverhalt.value || sachverhalt.value.trim() === '')) {
+        showFormError(errorElement, 'Bitte schildern Sie den Sachverhalt.');
+        return;
+    }
+    
+    if (schadenshoehe && (!schadenshoehe.value || schadenshoehe.value.trim() === '')) {
+        showFormError(errorElement, 'Bitte geben Sie die Gesamtschadenshöhe an.');
+        return;
+    }
+    
+    if (fotosUploadJa && fotosUploadNein && !fotosUploadJa.checked && !fotosUploadNein.checked) {
+        showFormError(errorElement, 'Bitte wählen Sie aus, ob Sie Fotos oder Dokumente haben.');
+        return;
+    }
+    
+    // Sammle erweiterte Daten
+    const extendedData = {};
+    if (datenWeg) extendedData.daten_weg = datenWeg.value.trim();
+    if (entwendetesGut) extendedData.entwendetes_gut = entwendetesGut.value.trim();
+    if (sachverhalt) extendedData.sachverhalt = sachverhalt.value.trim();
+    if (schadenshoehe) extendedData.schadenshoehe = schadenshoehe.value.trim();
+    if (fotosUploadJa && fotosUploadNein) {
+        extendedData.fotos_upload = fotosUploadJa.checked;
     }
     
     try {
@@ -332,7 +380,8 @@ async function handleDatetimeSubmit(event) {
             date: incidentDate,
             time: incidentTime,
             userLocationId: userLocationId ? parseInt(userLocationId) : null,
-            emailData: extractedData ? JSON.stringify(extractedData) : null
+            emailData: extractedData ? JSON.stringify(extractedData) : null,
+            extendedData: extendedData  // NEUE ZEILE: Erweiterte Daten hinzufügen
         });
         
         hideModal('datetime-modal');
@@ -682,6 +731,63 @@ export function removeEmailFile() {
     }
     
     showToast('Datei entfernt', 'info');
+}
+
+/**
+ * Setup extended form handlers for new fields
+ */
+function setupExtendedFormHandlers() {
+    console.log('Setting up extended form handlers...');
+    
+    // Fotos-Upload Radio Button Handling
+    const fotosJa = document.getElementById('fotos-upload-ja');
+    const fotosNein = document.getElementById('fotos-upload-nein');
+    const fotosHinweis = document.getElementById('fotos-hinweis');
+    
+    function toggleFotosHinweis() {
+        if (fotosJa && fotosJa.checked && fotosHinweis) {
+            fotosHinweis.classList.remove('hidden');
+        } else if (fotosHinweis) {
+            fotosHinweis.classList.add('hidden');
+        }
+    }
+    
+    if (fotosJa && fotosNein) {
+        fotosJa.addEventListener('change', toggleFotosHinweis);
+        fotosNein.addEventListener('change', toggleFotosHinweis);
+        console.log('Fotos upload handlers set up');
+    }
+    
+    // Character counter for textareas
+    const textareas = document.querySelectorAll('textarea[maxlength]');
+    textareas.forEach(textarea => {
+        const maxLength = textarea.getAttribute('maxlength');
+        if (maxLength) {
+            // Create character counter if it doesn't exist
+            let counter = textarea.parentNode.querySelector('.char-counter');
+            if (!counter) {
+                counter = document.createElement('div');
+                counter.className = 'char-counter text-xs text-gray-400 mt-1';
+                textarea.parentNode.appendChild(counter);
+            }
+            
+            function updateCounter() {
+                const remaining = maxLength - textarea.value.length;
+                counter.textContent = `${textarea.value.length}/${maxLength} Zeichen`;
+                
+                if (remaining < 50) {
+                    counter.classList.add('text-yellow-400');
+                    counter.classList.remove('text-gray-400');
+                } else {
+                    counter.classList.add('text-gray-400');
+                    counter.classList.remove('text-yellow-400');
+                }
+            }
+            
+            textarea.addEventListener('input', updateCounter);
+            updateCounter(); // Initial call
+        }
+    });
 }
 
 /**
